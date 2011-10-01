@@ -1,2 +1,4 @@
 #tak a tohle je druhej soubor, kterej bude taky nahranej
-main()
+int main(){
+return 0;
+}

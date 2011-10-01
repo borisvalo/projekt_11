@@ -1,2 +1,4 @@
 #prvni soubor napsany v jazyku C
-main()
+int main(){
+ return 0;
+}
