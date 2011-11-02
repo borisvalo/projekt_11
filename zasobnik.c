@@ -12,7 +12,7 @@ typedef struct stTZasobnik {
  * Inicializace zasobniku
  * @return = chybovy kod
  */
-int ZasobnikInit (TZasobnik *zas){
+int zasobnik_init (TZasobnik *zas){
 	if ((zas->array = malloc(REALLOC_SOUSTO*sizeof(int)))==NULL){
 		return ERR_INTERNI;
 	}
@@ -25,7 +25,7 @@ int ZasobnikInit (TZasobnik *zas){
  * Vyjme hodnotu z vrcholu zasobniku a (!)nevrati
  * @return = chybovy kod
  */
-int ZasobnikPop (TZasobnik *zas){
+int zasobnik_pop (TZasobnik *zas){
 	if (zas->top>=0){
 		zas->top--;
 	}
@@ -36,7 +36,7 @@ int ZasobnikPop (TZasobnik *zas){
  * Vlozi hodnotu na vrcholu zasobniku a posune ho
  * @return = chybovy kod
  */
-int ZasobnikPush (TZasobnik *zas, int hodn){
+int zasobnik_push (TZasobnik *zas, int hodn){
 	if (zas->top == zas->velikost-1){
 		if((zas->array=realloc(zas->array, zas->velikost+(REALLOC_SOUSTO * sizeof(int))))==NULL){
 			return ERR_INTERNI;
@@ -50,14 +50,24 @@ int ZasobnikPush (TZasobnik *zas, int hodn){
 
 
 /*
- * Vrati hodnotu na vrcholu zasobniku (+ s posunem)
+ * Vrati hodnotu na vrcholu zasobniku za pouziti fce zasobnik_pristup
  * @return = chybovy kod
  * *hodn = vraci hodnotu na vrcholu zasobniku
  */
-int ZasobnikTop (TZasobnik *zas, int * hodn){
-	if (zas-top < 0){
+int zasobnik_top (TZasobnik *zas, int * hodn){
+	return zasobnik_pristup(zas, hodn,0);
+}
+
+/*
+ * Vrati hodnotu na vrcholu zasobniku (+ s posunem)
+ * == zobecneni ZasobnikTop
+ * @return = chybovy kod
+ * *hodn = vraci hodnotu na vrcholu zasobniku
+ */
+int zasobnik_pristup (TZasobnik *zas, int * hodn, int posun=0){
+	if (zas->top < 0-posun){
 		return ERR_INTERNI;
 	}
-	*hodn = zas->array[zas->top];
+	*hodn = zas->array[zas->top-posun];
 	return ERR_OK;
 }
