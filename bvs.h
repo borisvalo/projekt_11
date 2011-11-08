@@ -33,3 +33,11 @@ typedef struct bsuzel {
 	struct bsuzel   *luk; //ukazatel na leveho potomka
 	struct bsuzel   *puk; //ukazatel na praveho potomka
 } TBSUzel, *UkTBSUzel;
+
+//FUNKCE
+void BVSInit (UkTBSUzel *Kor);
+int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah);
+void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah);
+void BVSNahradZaPraveho(UkTBSUzel PtrReplaced, UkTBSUzel *Kor);
+void BVSVymaz (UkTBSUzel *Kor, char *K);
+void BVSZrus (UkTBSUzel *Kor);
