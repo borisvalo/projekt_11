@@ -71,3 +71,11 @@ int zasobnik_pristup (TZasobnik *zas, int * hodn, int posun=0){
 	*hodn = zas->array[zas->top-posun];
 	return ERR_OK;
 }
+
+/*
+ * Je prazdny zasobnik?
+ * @return = true -> je prazdny
+ */
+int zasobnik_empty (TZasobnik *zas){
+	return (zas->top < 0);
+}

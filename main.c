@@ -41,6 +41,7 @@ int main(int argc, char** argv)){
 	tableDispose(&TabulkaSymbolu);
 	
 	if(kodChyby!=ERR_OK){
+		//TODO: odalokuj vnitrni
 		return kodChyby;
 	}
 	
