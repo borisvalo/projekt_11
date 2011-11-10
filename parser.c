@@ -104,182 +104,236 @@ void kontrola_identifikatoru(*token){
 	}
 }
 
+int ll_funkce (){
+	token = dej_mi_token();
+	if(token.typ == ENDOFFILE){
+// pravidlo 2	<FUNKCE> -> Eps
+		return ERR_OK;
+	}else if (token.typ != TNFUNCTION){
+// pravidlo 1	<FUNKCE> -> function id ( PARAMETR ) DEKLARACE PŘÍKAZY end ; FUNKCE 
+		return ERR_SYNTAX;
+	}
+	// id
+	token = dej_mi_token();
+	if (token.typ != IDKONEC) {
+		return ERR_SYNTAX;
+	}
+	// (
+	token = dej_mi_token();
+	if (token.typ != ZAVLEVA) {
+		return ERR_SYNTAX;
+	}
+	// PARAMETR
+	token = dej_mi_token();
+	chyba=ll_parametr();
+	// )
+	if (token.typ != ZAVPRAVA)
+		return ERR_SYNTAX;
+	}
+	// DEKLARACE
+	token = dej_mi_token();
+	chyba=ll_deklarace();
+	// PRIKAZY
+	chyba=ll_prikazy();
+	
+	if (token.typ != TNEND){
+		return ERR_SYNTAX;
+	}
+	token = dej_mi_token();
+	if (token.typ != STREDNIK){
+		return ERR_SYNTAX;
+	}
+	chyba=ll_funkce();
+}
+
+int ll_parametr(){
+	// pravidlo 3	<PARAMETR> -> ID DALŠÍ_PARAMETR
+	//nepovinne, tzn negeneruji errory
+	if (token.typ == IDKONEC){
+		chyba = ll_dalsi_parametr();
+	}
+	return chyba;
+}
+
+int ll_dalsi_parametr(){
+	// pravidlo 5	<DALŠÍ_PARAMETR> -> , ID DALŠÍ_PARAMETR
+	// nepovinne, tzn negeneruji errory
+	token = dej_mi_token();
+	if (token.typ == CARKA){
+		token=dej_mi_dalsi_token();
+		if (token.typ == IDKONEC){
+			chyba = ll_dalsi_parametr();
+		}else{
+			return ERR_SYNTAX;
+		}
+	}
+	return chyba;
+}
+
+int ll_deklarace(){
+	// pravidlo 7	<DEKLARACE> -> local id INICIALIZACE ; DEKLARACE
+	if (token.typ == TNLOCAL){
+	
+		token = dej_mi_token();
+		if (token.typ == IDKONEC){
+			chyba = ll_inicializace();
+		}else {
+			return ERR_SYNTAX;
+		}
+		
+		if (token.typ != STREDNIK) {
+			return ERR_SYNTAX;
+		}
+		token = dej_mi_token();
+		chyba=ll_deklarace();
+	}
+	return chyba;
+}
+
+int ll_inicializace(){		
+// pravidlo 9	<INICIALIZACE> -> =VÝRAZ
+// pravidlo 10	<INICIALIZACE> -> Eps
+	token = dej_mi_token();
+	if (token.typ == ROVNASEKONEC){
+		chyba = syntaxe_vyrazu();
+	}
+	return chyba;
+}
+
+int ll_prikazy(){
+	switch(token.typ){
+		case TNIF:	
+		// pravidlo 11	<PŘÍKAZY> -> if VÝRAZ then PŘÍKAZY else PŘÍKAZY end ; PŘÍKAZY
+								chyba = syntaxe_vyrazu();
+								
+								if (token.typ != TNTHEN){
+									return ERR_SYNTAX;
+								}
+								
+								token = dej_mi_token();
+								chyba = ll_prikazy();
+								
+								if (token.typ != TNELSE){
+									return ERR_SYNTAX;
+								}
+								token = dej_mi_token();
+								chyba = ll_prikazy();
+								
+								if (token.typ != TNEND){
+									return ERR_SYNTAX;
+								}
+								
+								token = dej_mi_token();
+								if (token.typ != STREDNIK){
+									return ERR_SYNTAX;
+								}
+								
+								token = dej_mi_token();
+								chyba = ll_prikazy();
+								break;
+								
+		// pravidlo 12	<PŘÍKAZY> -> id PŘÍKAZ_S_ID ; PŘÍKAZY
+		case IDKONEC:	chyba = ll_prikaz_s_id();
+									if (token.typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									chyba = ll_prikazy();
+									break;
+		// pravidlo 13	<PŘÍKAZY> -> return VÝRAZ ; PŘÍKAZY
+		case TNRETURN:	chyba = syntaxe_vyrazu();
+										
+										if (token.typ != STREDNIK){
+											return ERR_SYNTAX;
+										}
+										token = dej_mi_token();
+										chyba = ll_prikazy();
+										break;
+		// pravidlo 14	<PŘÍKAZY> -> while VÝRAZ do PŘÍKAZY end ; PŘÍKAZY
+		case TNWHILE:	chyba = syntaxe_vyrazu();
+		
+									if (token.typ != TNDO){
+										return ERR_SYNTAX;
+									}
+									
+									token = dej_mi_token();
+									chyba = ll_prikazy();
+									
+									if (token.typ != TNEND){
+										return ERR_SYNTAX;
+									}
+									token = dej_mi_token();
+									if (token.typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									token = dej_mi_token();
+									chyba = ll_prikazy();
+									break;
+	}//switch
+	return ERR_OK;
+}//fce
+
+
+int ll_prikaz_s_id(){
+	// pravidlo 16	<PŘÍKAZ_S_ID> -> ( VOLANI_PARAMETR )
+	// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
+	token = dej_mi_token();
+	switch (token.typ){
+		// pravidlo 16	<PŘÍKAZ_S_ID> -> ( PARAMETR )
+		case ZAVLEVA: ll_volani_parametr();
+		
+									if (token.typ != ZAVPRAVA){
+										return ERR_SYNTAX;
+									}
+									break;
+		// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
+		case ROVNASEKONEC:	ll_prikaz_s_id_a_rovnase();
+												break;
+		default: return ERR_SYNTAX;
+	}
+	return ERR_OK;
+}
+int ll_prikaz_s_id_a_rovnase(){
+	// pravidlo 18	<PŘÍKAZ_S_ID_A_ROVNASE> -> id ( VOLANI_PARAMETR )
+	// pravidlo 19	<PŘÍKAZ_S_ID_A_ROVNASE> -> VYRAZ
+	token = dej_mi_token();
+	if (token.typ == IDKONEC){
+		//volani fce
+		token = dej_mi_token();
+		if (token.typ != ZAVLEVA){
+			return ERR_SYNTAX;
+		}
+		
+		ll_volani_parametr();
+		
+		if (token.typ != ZAVPRAVA){
+			return ERR_SYNTAX;
+		}
+	}else {
+		chyba = syntaxe_vyrazu();
+	}
+	return chyba
+}
+
+int ll_volani_parametr(){
+// pravidlo 20 <VOLANI_PARAMETR> -> VYRAZ , VOLANI_PARAMETR
+	chyba = syntaxe_vyrazu();
+	
+	if (token.typ == CARKA){
+		chyba=ll_volani_parametr();
+	}
+	return chyba;
+}
+
 int syntakticky_analyzator(tTabulkaSymbolu *TabulkaSymbolu, tVnitrni *vnitrni){
-//zasobníkový automat
+//zasobníkový automat - misto stavu jsou volany fce - zasobnik neni potreba
 	int chyba=ERR_OK;
 	int pom;
 	
-	zasobnik_init(&zasobnik);
-	zasobnik_push(&zasobnik, ENDOFFILE); // konec souboru
-	zasobnik_push(&zasobnik, LL_FUNKCE); // počáteční stav
-	
-	while (!zasobnik_empty(&zasobnik)){
-	
-		if (novy_token == true){
-			token = dej_mi_token();
-			if (token.typ == IDKONEC){ // identifikatory testuji na klicova a rezervovana slova
-				kontrola_identifikatoru(&token);
-			}
+	while (true){
+		chyba = ll_funkce();
+		if (chyba != ERR_OK){
+			return chyba;
 		}
-		switch (zasobnik_top(&zasobnik)){
-			case LL_FUNKCE:	if (token.typ == TNFUNCTION){ // pravidlo 1
-												zasobnik_pop(&zasobnik);
-												zasobnik_push(&zasobnik,LL_FUNKCE);
-												zasobnik_push(&zasobnik,STREDNIK);
-												zasobnik_push(&zasobnik,TNEND);
-												zasobnik_push(&zasobnik,LL_PŘÍKAZY);
-												zasobnik_push(&zasobnik,LL_DEKLARACE);
-												zasobnik_push(&zasobnik,ZAVPRAVA);
-												zasobnik_push(&zasobnik,LL_PARAMETR);
-												zasobnik_push(&zasobnik,ZAVLEVA);
-												zasobnik_push(&zasobnik,IDKONEC);
-												zasobnik_push(&zasobnik,TNFUNCTION);    
-											}else if (token.typ == ENDOFFILE){//pravidlo 2
-												zasobnik_pop(&zasobnik);
-											}else {
-												chyba = ERR_SYNTAX;
-											}
-											break;
-			case LL_PARAMETR: if (token.typ == INTKONEC || token.typ == DESKONEC || token.typ == RETEZEC || token.typ == EXPKONEC || token.typ == TNTRUE || token.typ == TNFALSE || token.typ == TNNIL || token.typ == ZAVLEVA || token.typ == IDKONEC){// pravidlo 3
-													zasobnik_pop(&zasobnik);
-													zasobnik_push(&zasobnik,LL_DALSI_PARAMETR);
-													zasobnik_push(&zasobnik,LL_VYRAZ);
-												}else if(token.typ == ZAVPRAVA){// pravidlo 4
-													zasobnik_pop(&zasobnik);
-												}else {
-													chyba = ERR_SYNTAX;
-												}
-												break;
-			case LL_DALSI_PARAMETR: if (token.typ == ZAVPRAVA){ // pravidlo 6
-																zasobnik_pop(&zasobnik);
-															} else if(token.typ == CARKA){ //pravidlo 5
-																zasobnik_pop(&zasobnik);
-																zasobnik_push(&zasobnik,LL_DALSI_PARAMETR);
-																zasobnik_push(&zasobnik,LL_VYRAZ);
-																zasobnik_push(&zasobnik,CARKA);	
-															}else {
-																chyba = ERR_SYNTAX;
-															}
-															break;
-			case LL_DEKLARACE:	if (token.typ == IDKONEC || token.typ == TNIF || token.typ == TNRETURN || token.typ == TNWHILE){ // pravidlo 8
-														zasobnik_pop(&zasobnik);
-													}else if (token.typ == TNLOCAL){ // pravidlo 7
-														zasobnik_pop(&zasobnik);
-														zasobnik_push(&zasobnik,LL_DEKLARACE);
-														zasobnik_push(&zasobnik,STREDNIK);
-														zasobnik_push(&zasobnik,LL_INICIALIZACE);
-														zasobnik_push(&zasobnik,IDKONEC);
-														zasobnik_push(&zasobnik,TNLOCAL);
-													}else {
-														chyba = ERR_SYNTAX;
-													}
-													break;
-			case LL_INICIALIZACE:	if (token.typ == ROVNASEKONEC) { // pravidlo 9
-															zasobnik_pop(&zasobnik);
-															zasobnik_push(&zasobnik,LL_VYRAZ);
-															zasobnik_push(&zasobnik,ROVNASEKONEC);
-														}else if (token.typ == STREDNIK){ // pravidlo 10
-															zasobnik_pop(&zasobnik);
-														}else {
-															chyba = ERR_SYNTAX;
-														}
-														break;
-			case LL_PRIKAZY:	if (token.typ == IDKONEC) { // pravidlo 12
-													zasobnik_pop(&zasobnik);
-													zasobnik_push(&zasobnik,LL_PRIKAZY);
-													zasobnik_push(&zasobnik,STREDNIK);
-													zasobnik_push(&zasobnik,LL_PRIKAZ_S_ID);
-													zasobnik_push(&zasobnik,IDKONEC);
-												}else if (token.typ == TNIF){ // pravidlo 11
-													zasobnik_pop(&zasobnik);
-													zasobnik_push(&zasobnik,LL_PRIKAZY);
-													zasobnik_push(&zasobnik,STREDNIK);
-													zasobnik_push(&zasobnik,TNEND);
-													zasobnik_push(&zasobnik,LL_PRIKAZY);
-													zasobnik_push(&zasobnik,TNELSE);
-													zasobnik_push(&zasobnik,LL_PRIKAZY);
-													zasobnik_push(&zasobnik,TNTHEN);
-													zasobnik_push(&zasobnik,LL_VYRAZ);
-													zasobnik_push(&zasobnik,TNIF);
-												}else if (token.typ == TNRETURN) { // pravidlo 13
-													zasobnik_pop(&zasobnik);
-													zasobnik_push(&zasobnik,LL_PRIKAZY);
-													zasobnik_push(&zasobnik,STREDNIK);
-													zasobnik_push(&zasobnik,LL_VYRAZ);
-													zasobnik_push(&zasobnik,TNRETURN);
-												}else if (token.typ == TNWHILE) { // pravidlo 14
-													zasobnik_pop(&zasobnik);
-													zasobnik_push(&zasobnik,LL_PRIKAZY);
-													zasobnik_push(&zasobnik,STREDNIK);
-													zasobnik_push(&zasobnik,TNEND);
-													zasobnik_push(&zasobnik,LL_PRIKAZY);
-													zasobnik_push(&zasobnik,TNDO);
-													zasobnik_push(&zasobnik,LL_VYRAZ);
-													zasobnik_push(&zasobnik,TNWHILE);
-												}
-												}else if (token.typ == TNEND) { // pravdidlo 15
-													zasobnik_pop(&zasobnik);
-												}else {
-													chyba = ERR_SYNTAX;
-												}
-												break;
-			case LL_PRIKAZ_S_ID:	if(token.typ == ROVNASEKONEC) { // pravidlo 17
-															zasobnik_pop(&zasobnik);
-															zasobnik_push(&zasobnik,LL_PRIKAZY_S_ID_A_ROVNASE);
-															zasobnik_push(&zasobnik,ROVNASEKONEC);
-														}else if (token.typ == ZAVLEVA) { // pravidlo 16
-															zasobnik_pop(&zasobnik);
-															zasobnik_push(&zasobnik,ZAVPRAVA);
-															zasobnik_push(&zasobnik,LL_PARAMETR);
-															zasobnik_push(&zasobnik,ZAVLEVA);
-														}else {
-															chyba = ERR_SYNTAX;
-														}
-														break;
-			case LL_PRIKAZ_S_ID_A_ROVNASE: if (token.typ == IDKONEC){ // pravidlo 18
-																				zasobnik_pop(&zasobnik);
-																				zasobnik_push(&zasobnik,ZAVPRAVA);
-																				zasobnik_push(&zasobnik,LL_PARAMETR);
-																				zasobnik_push(&zasobnik,ZAVLEVA);
-																				zasobnik_push(&zasobnik,IDKONEC);	
-																			}else if (token.typ == INTKONEC || token.typ == DESKONEC || token.typ == RETEZEC || token.typ == EXPKONEC || token.typ == TNTRUE || token.typ == TNFALSE || token.typ == TNNIL || token.typ == ZAVLEVA || token.typ == IDKONEC ) { // pravidlo 19
-																				//vyraz
-																				zasobnik_pop(&zasobnik);
-																				zasobnik_push(&zasobnik, LL_VYRAZ);
-																			} else {
-																				chyba = ERR_SYNTAX;
-																			}
-																			break;
-				case LL_VYRAZ:	syntax_vyrazu(&zasobnik, &dalsi_znak);
-												zasobnik_pop(&zasobnik);
-												break;
-				case IDKONEC: // semanticke akce
-											break;
-				case TNIF:	generuj_instrukci_if();
-		}//switch
-		
-		
-		if (chyba!=ERR_OK){ //chyba ze switche
-			break;
-		}
-		if (zasobnik_top(&zasobnik, &pom)!=ERR_OK){
-			chyba = ERR_INTERNI;
-			break;
-		}
-		if (pom == token.typ) {
-			zasobnik_pop(&zasobnik);
-			if (token.typ == ENDOFFILE){
-				chyba = ERR_OK;
-				break;
-			}
-			novy_token = true;
-		}else{
-			novy_token = false;
-		}
-		
-	}//while
-
-
-	return chyba;
-}
-// fce vloz_instrukci
+		// TODO: osetrit endoffile
+	}// while
+} 
