@@ -3,12 +3,14 @@
 
 #include "interpret.h"
 
+// inicializace seznamu
 void Sez_init(UkTSezInstr L) {
 	L->aktivni = NULL;
 	L->prvni = NULL;
     L->posledni = NULL;
 }
 
+// zruseni celeho seznamu
 void Sez_zrus(UkTSezInstr L) {
 	UkTPlzkaSez PomUk;
 	while (L->prvni != NULL) {
@@ -19,6 +21,7 @@ void Sez_zrus(UkTSezInstr L) {
     L->aktivni = NULL;
 }
 
+// vlozeni prvku do seznamu
 void Sez_vloz(UkTSezInstr L, UkTInstr instr) {
 	UkTPlzkaSez PomUk;
 	if ((PomUk = malloc(sizeof(TPlzkaSez))) == NULL) {
@@ -39,13 +42,16 @@ void Sez_vloz(UkTSezInstr L, UkTInstr instr) {
     }
     
     L->posledni = PomUk;
+    printf("%d\n", L->posledni->instrukce.typInstr);
 }
 
+// nastaveni aktivity na prvni prvek
 void Sez_prvni(UkTSezInstr L) {
     L->aktivni = L->prvni;
 }
 
-void *Sez_hodnota_aktivniho(UkTSezInstr L)		{
+// vraci odkaz na strukturu instrukce
+void *Sez_hodnota_aktivniho(UkTSezInstr L) {
     if (L->aktivni == NULL) {
         printf("chybka - seznam neni aktivni..\n");
         return NULL;
@@ -54,28 +60,36 @@ void *Sez_hodnota_aktivniho(UkTSezInstr L)		{
 	return &(L->aktivni->instrukce);
 }
 
-
-void Sez_dalsi(UkTSezInstr L)	{
+// nastavi aktivitu na dalsi prvek
+void Sez_dalsi(UkTSezInstr L) {
     if (L->aktivni != NULL) {
         L->aktivni = L->aktivni->ukdalsi;
     }
 }
 
-void Sez_nastav_aktivni(UkTSezInstr L, void *instrukce) {
+// nastaveni aktivity na konkretni instrukci
+void Sez_nastav_aktivni(UkTSezInstr L, UkTPlzkaSez instrukce) {
     L->aktivni = instrukce;
 }
 
 int main() {
+    TSezInstr sez;
     UkTSezInstr seznam;
+    seznam = &sez;
     Sez_init(seznam);
+    
+    int cislo;
+    cislo = 5;
     
     TInstr instr1;
     instr1.typInstr = IN_ADD;
-    instr1.op1 = NULL;
+    instr1.op1 = (int *) &cislo;
     instr1.op2 = NULL;
     instr1.op3 = NULL;
     
     Sez_vloz(seznam, &instr1);
+    int *c = seznam->prvni->instrukce.op1;
+    printf("%d\n", *c);
     
     Sez_zrus(seznam);
     
