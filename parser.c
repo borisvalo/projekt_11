@@ -1,3 +1,5 @@
+#include "parser.h"
+
 /*
 //tokeny - konecne stavy
 typedef enum {
@@ -37,22 +39,22 @@ RSAND, RSBREAK, RSELSEIF, RSFOR, RSIN, RSNOT, RSOR,
 RSREPEAT, RSUNTIL,
 } TOKENY;
 */
-typedef enum{
-LL_FUNKCE, //očekávám funkci, nebo EOF
-LL_PARAMETR, //první parametr fce
-LL_DALSI_PARAMETR, //další
-LL_DEKLARACE, //deklarace proměnných
-LL_INICIALIZACE, // nepovinná inicializace
-//LL_LITERAL, // stav čekání na literál - číslo nebo řetězec
-LL_PRIKAZY, //blok příkazů ve funkci
-LL_PRIKAZ_S_ID, // výsledek faktorizace - příkaz typu id NĚCO
-LL_PRIKAZ_S_ID_A_ROVNASE, //  = NĚCO
-LL_TERMINAL, // terminál
-LL_VYRAZ
-}LL_stavy;
 
-void kontrola_identifikatoru(*token){
-	assert(token->typ == IDKONEC);
+UkTToken token;
+FILE *soubor;
+int chyba;
+UkTBSPolozka pom;
+
+int dej_token(){
+	chyba = ziskej_dalsi_token(soubor,token);
+	if (token->typ == IDKONEC){
+		kontrola_identifikatoru();
+	}
+	return chyba;
+}
+
+void kontrola_identifikatoru(){
+	//assert(token->typ == IDKONEC);
 	if (strcmp(token->data, "do") == 0) {
 		token->typ = TNDO;
 	}else	if (strcmp(token->data, "else") == 0) {
@@ -105,63 +107,103 @@ void kontrola_identifikatoru(*token){
 }
 
 int ll_funkce (){
-	token = dej_mi_token();
-	if(token.typ == ENDOFFILE){
+	printf("ll_funkce: vstup\n");
+	chyba = dej_token();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
+	if(token->typ == ENDOFFILE){
 // pravidlo 2	<FUNKCE> -> Eps
+		printf("ll_funkce: prijato: endoffile\n");
 		return ERR_OK;
-	}else if (token.typ != TNFUNCTION){
+	}else if (token->typ != TNFUNCTION){     
 // pravidlo 1	<FUNKCE> -> function id ( PARAMETR ) DEKLARACE PŘÍKAZY end ; FUNKCE 
 		return ERR_SYNTAX;
 	}
+		printf("ll_funkce: prijato: function\n");
 	// id
-	token = dej_mi_token();
-	if (token.typ != IDKONEC) {
+	chyba = dej_token();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
+	if (token->typ != IDKONEC) {
 		return ERR_SYNTAX;
 	}
+		printf("ll_funkce: prijato: idkonec\n");
 	// (
-	token = dej_mi_token();
-	if (token.typ != ZAVLEVA) {
+	chyba = dej_token();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
+	if (token->typ != ZAVLEVA) {
 		return ERR_SYNTAX;
 	}
+		printf("ll_funkce: prijato: zavleva\n");
 	// PARAMETR
-	token = dej_mi_token();
+	chyba = dej_token();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
 	chyba=ll_parametr();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
 	// )
-	if (token.typ != ZAVPRAVA)
+	if (token->typ != ZAVPRAVA){
 		return ERR_SYNTAX;
 	}
+		printf("ll_funkce: prijato: zavprava\n");
 	// DEKLARACE
-	token = dej_mi_token();
+	chyba = dej_token();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
 	chyba=ll_deklarace();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
 	// PRIKAZY
+		printf("ll_funkce: po deklaraci\n");
 	chyba=ll_prikazy();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
+		printf("ll_funkce: po prikazech\n");
 	
-	if (token.typ != TNEND){
+	if (token->typ != TNEND){
 		return ERR_SYNTAX;
 	}
-	token = dej_mi_token();
-	if (token.typ != STREDNIK){
+		printf("ll_funkce: prijato: end\n");
+	chyba = dej_token();
+	if (chyba != ERR_OK){
+		return chyba;
+	}
+	if (token->typ != STREDNIK){
 		return ERR_SYNTAX;
 	}
+		printf("ll_funkce: prijato: strednik\n");
 	chyba=ll_funkce();
+	return chyba;
 }
 
 int ll_parametr(){
+	printf("ll_parametr: vstup\n");
 	// pravidlo 3	<PARAMETR> -> ID DALŠÍ_PARAMETR
 	//nepovinne, tzn negeneruji errory
-	if (token.typ == IDKONEC){
+	if (token->typ == IDKONEC){
 		chyba = ll_dalsi_parametr();
 	}
 	return chyba;
 }
 
 int ll_dalsi_parametr(){
+	printf("ll_dalsi_parametr: vstup\n");
 	// pravidlo 5	<DALŠÍ_PARAMETR> -> , ID DALŠÍ_PARAMETR
 	// nepovinne, tzn negeneruji errory
-	token = dej_mi_token();
-	if (token.typ == CARKA){
-		token=dej_mi_dalsi_token();
-		if (token.typ == IDKONEC){
+	chyba = dej_token();
+	if (token->typ == CARKA){
+		chyba = dej_token();
+		if (token->typ == IDKONEC){
 			chyba = ll_dalsi_parametr();
 		}else{
 			return ERR_SYNTAX;
@@ -171,70 +213,80 @@ int ll_dalsi_parametr(){
 }
 
 int ll_deklarace(){
+	printf("ll_deklarace: vstup\n");
 	// pravidlo 7	<DEKLARACE> -> local id INICIALIZACE ; DEKLARACE
-	if (token.typ == TNLOCAL){
+	if (token->typ == TNLOCAL){
 	
-		token = dej_mi_token();
-		if (token.typ == IDKONEC){
+		chyba = dej_token();
+		if (token->typ == IDKONEC){
+			printf("ll_deklarace: ID\n");
+			if (BVSNajdi (tabulka_symbolu, token->data, NULL)){ // pokud již je v tabulce -> redeklarace -> err
+				return ERR_SEMANT;
+			}else{
+				BVSVloz(tabulka_symbolu , token->data, NULL); // pouze vlozit informaci o nazvu promenne
+			}
+			printf("ll_deklarace: v tabulce\n");
 			chyba = ll_inicializace();
 		}else {
 			return ERR_SYNTAX;
 		}
 		
-		if (token.typ != STREDNIK) {
+		if (token->typ != STREDNIK) {
 			return ERR_SYNTAX;
 		}
-		token = dej_mi_token();
+		chyba = dej_token();
 		chyba=ll_deklarace();
 	}
 	return chyba;
 }
 
 int ll_inicializace(){		
+	printf("ll_inicializace: vstup\n");
 // pravidlo 9	<INICIALIZACE> -> =VÝRAZ
 // pravidlo 10	<INICIALIZACE> -> Eps
-	token = dej_mi_token();
-	if (token.typ == ROVNASEKONEC){
-		chyba = syntaxe_vyrazu();
+	chyba = dej_token();
+	if (token->typ == ROVNASEKONEC){
+		chyba = syntaxe_vyrazu();// TODO: vložení hodnoty do TS
 	}
 	return chyba;
 }
 
 int ll_prikazy(){
-	switch(token.typ){
+	printf("ll_prikazy: vstup\n");
+	switch(token->typ){
 		case TNIF:	
 		// pravidlo 11	<PŘÍKAZY> -> if VÝRAZ then PŘÍKAZY else PŘÍKAZY end ; PŘÍKAZY
 								chyba = syntaxe_vyrazu();
 								
-								if (token.typ != TNTHEN){
+								if (token->typ != TNTHEN){
 									return ERR_SYNTAX;
 								}
 								
-								token = dej_mi_token();
+								chyba = dej_token();
 								chyba = ll_prikazy();
 								
-								if (token.typ != TNELSE){
+								if (token->typ != TNELSE){
 									return ERR_SYNTAX;
 								}
-								token = dej_mi_token();
+								chyba = dej_token();
 								chyba = ll_prikazy();
 								
-								if (token.typ != TNEND){
+								if (token->typ != TNEND){
 									return ERR_SYNTAX;
 								}
 								
-								token = dej_mi_token();
-								if (token.typ != STREDNIK){
+								chyba = dej_token();
+								if (token->typ != STREDNIK){
 									return ERR_SYNTAX;
 								}
 								
-								token = dej_mi_token();
+								chyba = dej_token();
 								chyba = ll_prikazy();
 								break;
 								
 		// pravidlo 12	<PŘÍKAZY> -> id PŘÍKAZ_S_ID ; PŘÍKAZY
 		case IDKONEC:	chyba = ll_prikaz_s_id();
-									if (token.typ != STREDNIK){
+									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
 									chyba = ll_prikazy();
@@ -242,30 +294,30 @@ int ll_prikazy(){
 		// pravidlo 13	<PŘÍKAZY> -> return VÝRAZ ; PŘÍKAZY
 		case TNRETURN:	chyba = syntaxe_vyrazu();
 										
-										if (token.typ != STREDNIK){
+										if (token->typ != STREDNIK){
 											return ERR_SYNTAX;
 										}
-										token = dej_mi_token();
+										chyba = dej_token();
 										chyba = ll_prikazy();
 										break;
 		// pravidlo 14	<PŘÍKAZY> -> while VÝRAZ do PŘÍKAZY end ; PŘÍKAZY
 		case TNWHILE:	chyba = syntaxe_vyrazu();
 		
-									if (token.typ != TNDO){
+									if (token->typ != TNDO){
 										return ERR_SYNTAX;
 									}
 									
-									token = dej_mi_token();
+									chyba = dej_token();
 									chyba = ll_prikazy();
 									
-									if (token.typ != TNEND){
+									if (token->typ != TNEND){
 										return ERR_SYNTAX;
 									}
-									token = dej_mi_token();
-									if (token.typ != STREDNIK){
+									chyba = dej_token();
+									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
-									token = dej_mi_token();
+									chyba = dej_token();
 									chyba = ll_prikazy();
 									break;
 	}//switch
@@ -274,14 +326,15 @@ int ll_prikazy(){
 
 
 int ll_prikaz_s_id(){
+	printf("ll_prikazy_s_id: vstup\n");
 	// pravidlo 16	<PŘÍKAZ_S_ID> -> ( VOLANI_PARAMETR )
 	// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
-	token = dej_mi_token();
-	switch (token.typ){
+	chyba = dej_token();
+	switch (token->typ){
 		// pravidlo 16	<PŘÍKAZ_S_ID> -> ( PARAMETR )
 		case ZAVLEVA: ll_volani_parametr();
 		
-									if (token.typ != ZAVPRAVA){
+									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}
 									break;
@@ -292,48 +345,71 @@ int ll_prikaz_s_id(){
 	}
 	return ERR_OK;
 }
-int ll_prikaz_s_id_a_rovnase(){
+int ll_prikaz_s_id_a_rovnase(){	
+	printf("ll_prikazy_s_id_a_rovnase: vstup\n");
 	// pravidlo 18	<PŘÍKAZ_S_ID_A_ROVNASE> -> id ( VOLANI_PARAMETR )
 	// pravidlo 19	<PŘÍKAZ_S_ID_A_ROVNASE> -> VYRAZ
-	token = dej_mi_token();
-	if (token.typ == IDKONEC){
+	chyba = dej_token();
+	if (token->typ == IDKONEC){
 		//volani fce
-		token = dej_mi_token();
-		if (token.typ != ZAVLEVA){
+		chyba = dej_token();
+		if (token->typ != ZAVLEVA){
 			return ERR_SYNTAX;
 		}
 		
 		ll_volani_parametr();
 		
-		if (token.typ != ZAVPRAVA){
+		if (token->typ != ZAVPRAVA){
 			return ERR_SYNTAX;
 		}
 	}else {
 		chyba = syntaxe_vyrazu();
 	}
-	return chyba
+	return chyba;
 }
 
 int ll_volani_parametr(){
+	printf("ll_volani_parametr: vstup\n");
 // pravidlo 20 <VOLANI_PARAMETR> -> VYRAZ , VOLANI_PARAMETR
 	chyba = syntaxe_vyrazu();
 	
-	if (token.typ == CARKA){
+	if (token->typ == CARKA){
 		chyba=ll_volani_parametr();
 	}
 	return chyba;
 }
 
-int syntakticky_analyzator(tTabulkaSymbolu *TabulkaSymbolu, tVnitrni *vnitrni){
-//zasobníkový automat - misto stavu jsou volany fce - zasobnik neni potreba
-	int chyba=ERR_OK;
-	int pom;
+int syntakticky_analyzator(){
+	printf("syntakticky analyzator: vstup\n");
+// rekurzivni metoda
+
+	chyba = ll_funkce();
+	return chyba;
+}
+
+int main(){
+	printf("main: prvni kontrola\n");
+	chyba = ERR_OK;
+	if ((soubor = fopen("kod", "r")) == NULL) {
+		printf("main: otevreni souboru\n");
+		return ERR_INTERNI;
+  }
+	printf("main: druha kontrola\n");
+	if ((token = malloc(sizeof(int) + 20* sizeof(char)))==NULL){
+		chyba = ERR_INTERNI;
+	}else{
+		chyba = syntakticky_analyzator();
+	}
+	printf("main: treti kontrola\n");
 	
-	while (true){
-		chyba = ll_funkce();
-		if (chyba != ERR_OK){
-			return chyba;
-		}
-		// TODO: osetrit endoffile
-	}// while
-} 
+	fclose(soubor);
+	
+	printf("main: ctvrta kontrola\n");
+	if (chyba != EOK){
+		printf("main: končím s kodem: %d",chyba);
+		return chyba;
+	}else{
+		printf("OK\n");
+		return ERR_OK;
+	}
+}
