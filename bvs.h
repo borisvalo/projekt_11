@@ -36,7 +36,7 @@ typedef struct bsuzel {
 
 //FUNKCE
 void BVSInit (UkTBSUzel *Kor);
-int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah);
+int  BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah);
 void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah);
 void BVSNahradZaPraveho(UkTBSUzel PtrReplaced, UkTBSUzel *Kor);
 void BVSVymaz (UkTBSUzel *Kor, char *K);

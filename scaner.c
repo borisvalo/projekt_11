@@ -6,22 +6,47 @@
 #include <ctype.h>
 #include <string.h>
 
+#include "string.h"
 #include "obecne.h"
 #include "scaner.h"
 
+//funkce pro alokovani pameti tokenu
+void token_alokuj(UkTToken *strukt) {
+    if (((*strukt) = (UkTToken) malloc(sizeof(TToken))) == NULL) {
+        printf("chyba mallocu!!");
+    }
+    //Ret_alokuj(&((*strukt)->data), MIN_ARR);
+    (*strukt)->data = NULL;
+    (*strukt)->delka = MIN_ARR;
+}
+
+//funkce pro uvolneni tokenu
+void token_uvolni(UkTToken strukt) {
+    if (strukt->typ == IDKONEC ||
+        strukt->typ == RETEZEC ||
+        strukt->typ == INTKONEC ||
+        strukt->typ == EXPKONEC ||
+        strukt->typ == DESKONEC
+        ) {
+        Ret_uvolni(strukt->data);
+    }
+   
+    free(strukt);
+}
+
 //-------------------------------------------------------
-//-------------------------------------------------------
-//funkce cte znaky a pomoci konecneho automatu rozpozna
-//tokeny a upravi zadanou strukturu, kde je urcen typ
-//tokenu a jeho pripadna data.
-//parametry:---------------------------------------------
+//popis:.................................................
+//  funkce cte znaky a pomoci konecneho automatu rozpozna
+//  tokeny a upravi zadanou strukturu, kde je urcen typ
+//  tokenu a jeho pripadna data.
+//parametry:.............................................
 //  FILE *f          - soubor ze ktereho cteme
 //  UkTToken strukt  - struktura tokenu
-//navratove hodnoty:-------------------------------------
+//navratove hodnoty:.....................................
 //  KONEC_OK         - vse v poradku
 //  KONEC_CHYBA      - nastala chyba
 //-------------------------------------------------------
-//-------------------------------------------------------
+
 int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
     int stav = INIT; //prvni stav je automaticky INIT
     int symbol;      //nacitany znak
@@ -37,6 +62,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
             case INIT:
                 if (symbol == '"') {
                     stav = Literal;
+                    Ret_alokuj(&(strukt->data), MIN_ARR);
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
@@ -92,6 +118,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 //cislo
                 else if (isdigit(symbol) != 0) {
                     stav = Int;
+                    Ret_alokuj(&(strukt->data), MIN_ARR);
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
@@ -103,6 +130,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 else if (isalpha(symbol) != 0 ||
                          symbol == '_') {
                     stav = Id;
+                    Ret_alokuj(&(strukt->data), MIN_ARR);
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
@@ -126,17 +154,29 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 else if (symbol == 'e' ||
                          symbol == 'E') {
                     stav = Exp;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
                 else if (isdigit(symbol) != 0) {
                     //stejny stav
                     stav = Int;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
                 else {
                     ungetc(symbol, f);
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = '\0'; //ukonceni retezce
                     strukt->typ = INTKONEC;
                     return KONEC_OK;
@@ -149,17 +189,29 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 if (symbol == 'e' ||
                     symbol == 'E') {
                     stav = Exp;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
                 else if (isdigit(symbol) != 0) {
                     //stejny stav
                     stav = Des;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
                 else {
                     ungetc(symbol, f);
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = '\0'; //ukonceni retezce
                     strukt->typ = DESKONEC;
                     return KONEC_OK;
@@ -172,11 +224,19 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 if (symbol == '+' ||
                     symbol == '-') {
                     stav = ExpPlusMinus;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
                 else if (isdigit(symbol) != 0) {
                     stav = Exp2;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
@@ -186,15 +246,24 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 }
                 break;
             //...........................................
+            //cislo s exp - pomocny
             case Exp2:
                 if (isdigit(symbol) != 0) {
                     //stejny stav
                     stav = Exp2;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
                 else {
                     ungetc(symbol, f);
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = '\0'; //ukonceni retezce
                     strukt->typ = EXPKONEC;
                     return KONEC_OK;
@@ -205,6 +274,10 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
             case ExpPlusMinus:
                 if (isdigit(symbol) != 0) {
                     stav = Exp2;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
@@ -218,17 +291,29 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
             //strukt->data v uvozovkach
             case Literal:
                 if (symbol == '\\') {
+                    stav = Escape;
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
-                    stav = Escape;
                 }
                 else if (symbol == '"') {
+                    if ((citac + 2) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     strukt->data[(citac + 1)] = '\0'; //ukonceni retezce
                     strukt->typ = RETEZEC;
                     return KONEC_OK;
                 }
                 else {
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
@@ -238,6 +323,10 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
             //osetreni escape sekvence \"
             //aby neskoncil strukt->data predcasne
             case Escape:
+                if ((citac + 1) > strukt->delka) { //realokace
+                    strukt->delka = strukt->delka * NAS_DEL;
+                    Ret_realokuj(&(strukt->data), strukt->delka);
+                }
                 strukt->data[citac] = symbol;
                 citac++; //bude se cist dalsi znak
                 stav = Literal;
@@ -386,14 +475,22 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 if (isalpha(symbol) != 0 ||
                     isdigit(symbol) != 0 ||
                     symbol == '_') {
-                    stav = Id;//stejny stav
+                    stav = Id; //stejny stav
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = symbol;
                     citac++; //bude se cist dalsi znak
                 }
                 else { //konec retezce
                     ungetc(symbol, f);
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
                     strukt->data[citac] = '\0'; //ukonceni retezce
-                    strukt->typ = IDKONEC; //mozna klicove slovo
+                    strukt->typ = IDKONEC;
                     return KONEC_OK;
                 }
                 break;
@@ -405,50 +502,3 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
         }
     }
 }
-
-/*
-//testovani klicovych slov - az bude BVS, tak vymazat..
-//pokud je strukt->data klicove slovo, funkce vrati prislusny token
-int test_klicovych_slov(char *strukt->data) {
-    if (strcmp(strukt->data, "do") == 0)
-        { return TNDO; }
-    else if (strcmp(strukt->data, "else") == 0)
-        { return TNELSE; }
-    else if (strcmp(strukt->data, "end") == 0) 
-        { return TNEND; }
-    else if (strcmp(strukt->data, "false") == 0)
-        { return TNFALSE; }
-    else if (strcmp(strukt->data, "function") == 0)
-        { return TNFUNCTION; }
-    else if (strcmp(strukt->data, "if") == 0)
-        { return TNIF; }
-    else if (strcmp(strukt->data, "local") == 0)
-        { return TNLOCAL; }
-    else if (strcmp(strukt->data, "nil") == 0)
-        { return TNNIL; }
-    else if (strcmp(strukt->data, "read") == 0)
-        { return TNREAD; }
-    else if (strcmp(strukt->data, "return") == 0)
-        { return TNRETURN; }
-    else if (strcmp(strukt->data, "then") == 0)
-        { return TNTHEN; }
-    else if (strcmp(strukt->data, "true") == 0)
-        { return TNTRUE; }
-    else if (strcmp(strukt->data, "while") == 0)
-        { return TNWHILE; }
-    else if (strcmp(strukt->data, "write") == 0)
-        { return TNWRITE; }
-    else if (strcmp(strukt->data, "and") == 0 ||
-             strcmp(strukt->data, "break") == 0 ||
-             strcmp(strukt->data, "elseif") == 0 ||
-             strcmp(strukt->data, "for") == 0 ||
-             strcmp(strukt->data, "in") == 0 ||
-             strcmp(strukt->data, "not") == 0 ||
-             strcmp(strukt->data, "or") == 0 ||
-             strcmp(strukt->data, "repeat") == 0 ||
-             strcmp(strukt->data, "until") == 0)
-        { return REZSL; }
-    //neni klicove slovo => je identifikator
-    else { return IDKONEC; }
-}
- */

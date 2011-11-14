@@ -1,7 +1,8 @@
 // scaner.h
 
 //pomocne definice:
-#define MAX_ARR     20
+#define MIN_ARR     8
+#define NAS_DEL     2
 #define KONEC_OK    0
 #define KONEC_CHYBA 1
 
@@ -53,11 +54,13 @@ typedef enum {
 
 // struktura tokenu
 typedef struct stTToken {
-    int typ;                //typ tokenu
-    char data[MAX_ARR];     //data tokenu
-    int radek;              //radek v souboru
+    int   typ;     //typ tokenu
+    char *data;    //data tokenu
+    int   delka;   //delka retezce
+    int   radek;   //radek v souboru
 } TToken, *UkTToken;
 
 // FUNKCE:
+void token_alokuj(UkTToken *strukt);
+void token_uvolni(UkTToken strukt);
 int ziskej_dalsi_token(FILE *f, UkTToken strukt);
-//int test_klicovych_slov(char *retezec);
