@@ -17,6 +17,7 @@ typedef enum nazvyInstrukci {
     IN_ADD,              // +               in      in      out
     IN_SUB,              // -               in      in      out
     IN_MUL,              // *               in      in      out
+    IN_MOCN,              // *               in      in      out
     IN_DIV,              // /               in      in      out
     IN_GOTO,             // goto            label   -       -
     IN_LABEL,            // label           label
@@ -25,6 +26,7 @@ typedef enum nazvyInstrukci {
     IN_VETSI,            // >               in      in      out
     IN_VETROV,           // >=              in      in      out
     IN_ROVNO,            // ==              in      in      out
+    IN_NEROVNO,            // ==              in      in      out
     IN_KONK,             // ..              in      in      out
     IN_KONEC,            //konec interpretu
 
@@ -37,7 +39,7 @@ typedef enum nazvyInstrukci {
 //STRUKTURY -----------------------------------------------
 
 //struktura pro jednotlive instrukce
-//ukazatel na void se pozdeji pretipuje
+//ukazatel na void se pozdeji pretypuje
 typedef struct {
   int typInstr;              // typ instrukce
   void *op1;                 // adresa 1

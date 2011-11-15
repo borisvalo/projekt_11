@@ -6,7 +6,7 @@
 
 //alokace pameti pro retezec
 void Ret_alokuj(TRetezec *ret, int pocet) {
-    if (((*ret) = (TRetezec) malloc(pocet)) == NULL) {
+    if (((*ret) = (TRetezec) malloc(pocet * sizeof(char))) == NULL) {
         printf("chyba malloc!!\n");
     }
 }

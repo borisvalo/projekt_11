@@ -8,13 +8,29 @@
 #include "str.h"
 #include "parser.h"
 #include "bvs.h"
+#include "interpret.h"
 
 
 UkTToken token;
 FILE *soubor;
 int chyba;
 TZasobnik zasobnik;
-UkTBSUzel *tab_sym;
+UkTBSUzel tab_sym;
+UkTBSUzel pom_tab_sym;
+UkTBSUzel nazvy_funkci; // kam odkazuje navesti
+UkTBSPolozka obsah;
+//UkTSezInstr seznam_instukci;
+unsigned int klic_cislo=0;
+TPrvek prvek_pomocny;
+UkTSezInstr seznam_instrukci;
+int typ_instrukce;
+void *op1; 
+void *op2; 
+void *op3;
+
+
+UkTBSUzel pole_stromu;
+int delka_pole_stromu;
 
 
 typedef enum {
@@ -57,6 +73,16 @@ typedef enum {
     DOLAR = 15         // $
 
 } typ_operace;
+
+
+
+// Vygeneruje nazev (klic) pro pomocne symboly
+//
+char *generuj_klic(int posun) {
+    char *klic = malloc(sizeof(char) * 20);
+    sprintf(klic, "pom_%u", (klic_cislo++)-posun);
+    return klic;
+}
 
 
 
@@ -245,7 +271,15 @@ int ll_funkce (){
 	if (token->typ != IDKONEC) {
 		return ERR_SYNTAX;
 	}
-		printf("ll_funkce: prijato: idkonec\n");
+	
+	//chyba = Pole_alokuj(pole_stromu, delka_pole_stromu);
+	if (chyba!=ERR_OK){
+		return chyba;
+	}
+	
+	//BVSNajdi(tab_sym, token->data, NULL);
+	
+	printf("ll_funkce: prijato: idkonec\n");
 	// (
 	chyba = dej_token();
 	if (chyba != ERR_OK){
@@ -313,7 +347,15 @@ int ll_parametr(){
 	printf("ll_parametr: vstup\n");
 	// pravidlo 3	<PARAMETR> -> ID DALŠÍ_PARAMETR
 	//nepovinne, tzn negeneruji errory
-	if (token->typ == IDKONEC){
+	if (token->typ == IDKONEC){	
+		if (!BVSNajdi (tab_sym, token->data, NULL)){ // pokud již je v tabulce -> redeklarace -> err
+			return ERR_SEMANT;
+		}else{
+			printf("pred_vlozenim\n");
+			obsah->typ=TDNIL;
+			BVSVloz(&tab_sym, token->data, obsah); 
+		}
+	
 		chyba = ll_dalsi_parametr();		
 		if (chyba!=ERR_OK){
 			return chyba;
@@ -335,7 +377,14 @@ int ll_dalsi_parametr(){
 		if (chyba!=ERR_OK){
 			return chyba;
 		}
-		if (token->typ == IDKONEC){
+		if (token->typ == IDKONEC){		
+			if (!BVSNajdi (tab_sym, token->data, NULL)){ // pokud již je v tabulce -> redeklarace -> err
+				return ERR_SEMANT;
+			}else{
+				printf("pred_vlozenim\n");
+				obsah->typ=TDNIL;
+				BVSVloz(&tab_sym, token->data, obsah); 
+			}
 			chyba = ll_dalsi_parametr();		
 			if (chyba!=ERR_OK){
 				return chyba;
@@ -358,10 +407,12 @@ int ll_deklarace(){
 		}
 		if (token->typ == IDKONEC){
 			printf("ll_deklarace: ID\n");
-			if (BVSNajdi (tab_sym, token->data, NULL)){ // pokud již je v tabulce -> redeklarace -> err
+			if (!BVSNajdi (tab_sym, token->data, NULL)){ // pokud již je v tabulce -> redeklarace -> err
 				return ERR_SEMANT;
 			}else{
-				BVSVloz(tabulka_symbolu, token->data, ); 
+				printf("pred_vlozenim\n");
+				obsah->typ=TDNIL;
+				BVSVloz(&tab_sym, token->data, obsah); 
 			}
 			printf("ll_deklarace: v tabulce\n");
 			chyba = ll_inicializace();		
@@ -395,9 +446,36 @@ int ll_inicializace(){
 	if (chyba!=ERR_OK){
 		return chyba;
 	}
-	if (token->typ == ROVNASEKONEC){
-		chyba = syntax_vyrazu();// TODO: vložení hodnoty do TS
+	if (token->typ != ROVNASEKONEC){
+		return ERR_OK;
 	}
+	chyba = dej_token();	
+	if (chyba!=ERR_OK){
+		return chyba;
+	}	
+	switch(token->typ){
+		case DESKONEC: 
+		case INTKONEC: 
+		case EXPKONEC:	obsah->typ = TDCISLO;
+										obsah->data.dataCis = atof(token->data);
+										break;
+		case RETEZEC:	obsah->	typ = TDRETEZEC;
+									Ret_alokuj(&(obsah->data.dataRet), token->delka);
+									strcpy(obsah->data.dataRet,token->data);
+									break;
+		case TNTRUE:	obsah->typ = TDBOOL;
+									obsah->data.dataBool = TRUE;
+									break;
+		case TNFALSE:	obsah->typ = TDBOOL;
+									obsah->data.dataBool = FALSE;
+									break;
+		case TNNIL: break; // nil je implicitni
+		default: return ERR_SEMANT;
+	}
+	chyba = dej_token();	
+	if (chyba!=ERR_OK){
+		return chyba;
+	}	
 	return chyba;
 }
 
@@ -662,6 +740,12 @@ int main(){
 		return chyba;
 	}
 	
+	delka_pole_stromu=1;
+	
+	if ((obsah = malloc(sizeof (TBSPolozka)))==NULL){
+		return ERR_INTERNI;
+	}
+	
 	chyba = syntakticky_analyzator();
 	
 	token_uvolni(token);
@@ -792,8 +876,46 @@ int syntax_vyrazu() {
         else if(znamenko == ROVNO) {
 
 				    pom_prvek.typ = token->typ;
-
-            if(zasobnik_push(&zasobnik, pom_prvek) == ERR_INTERNI) {
+				    
+				    if(token->typ == IDKONEC) {
+				    	if(!BVSNajdi(tab_sym, token->data, obsah)) {
+				    		return ERR_SEMANT;
+				    	}
+				    	pom_prvek.uk_na_prvek_ts = obsah;
+				    }
+				    
+				    // Vlozeni do pomocne tabulky symbolu
+				    // Ulozeni typu a odkazu do tabulky symbolu na zasobnik
+				    else if((token->typ == INTKONEC) || (token->typ == DESKONEC) || (token->typ == EXPKONEC)) {
+        				obsah->data.dataCis = atof(token->data);
+        				obsah->typ = TDCISLO;
+        				BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+        				pom_prvek.uk_na_prvek_ts = obsah;		
+        		}
+        		
+        		else if(token->typ == RETEZEC) {
+        				Ret_alokuj(&(obsah->data.dataRet), token->delka);
+								strcpy(obsah->data.dataRet,token->data);
+        				obsah->typ = TDRETEZEC;
+        				BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+        				pom_prvek.uk_na_prvek_ts = obsah;		
+        		}
+        		
+        		else if(token->typ == TNTRUE) {
+        				obsah->typ = TDBOOL;
+								obsah->data.dataBool = TRUE;
+								BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+								pom_prvek.uk_na_prvek_ts = obsah;
+        		}
+        		
+        		else if(token->typ == TNFALSE) {
+        				obsah->typ = TDBOOL;
+								obsah->data.dataBool = FALSE;
+								BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+								pom_prvek.uk_na_prvek_ts = obsah;
+        		}
+        		
+        		if(zasobnik_push(&zasobnik, pom_prvek) == ERR_INTERNI) {
                 //err_chyba = ERR_INTERNI;
                 return ERR_INTERNI;
             }
@@ -831,8 +953,46 @@ int syntax_vyrazu() {
             }
 
 						pom_prvek.typ = token->typ;
-						
-            if(zasobnik_push(&zasobnik, pom_prvek) == ERR_INTERNI) {
+				    
+				    if(token->typ == IDKONEC) {
+				    	if(!BVSNajdi(tab_sym, token->data, obsah)) {
+				    		return ERR_SEMANT;
+				    	}
+				    	pom_prvek.uk_na_prvek_ts = obsah;
+				    }
+				    
+				    // Vlozeni do pomocne tabulky symbolu
+				    // Ulozeni typu a odkazu do tabulky symbolu na zasobnik
+				    else if((token->typ == INTKONEC) || (token->typ == DESKONEC) || (token->typ == EXPKONEC)) {
+        				obsah->data.dataCis = atof(token->data);
+        				obsah->typ = TDCISLO;
+        				BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+        				pom_prvek.uk_na_prvek_ts = obsah;		
+        		}
+        		
+        		else if(token->typ == RETEZEC) {
+        				Ret_alokuj(&(obsah->data.dataRet), token->delka);
+								strcpy(obsah->data.dataRet,token->data);
+        				obsah->typ = TDRETEZEC;
+        				BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+        				pom_prvek.uk_na_prvek_ts = obsah;		
+        		}
+        		
+        		else if(token->typ == TNTRUE) {
+        				obsah->typ = TDBOOL;
+								obsah->data.dataBool = TRUE;
+								BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+								pom_prvek.uk_na_prvek_ts = obsah;
+        		}
+        		
+        		else if(token->typ == TNFALSE) {
+        				obsah->typ = TDBOOL;
+								obsah->data.dataBool = FALSE;
+								BVSVloz(&pom_tab_sym, generuj_klic(0), obsah);
+								pom_prvek.uk_na_prvek_ts = obsah;
+        		}
+        		
+        		if(zasobnik_push(&zasobnik, pom_prvek) == ERR_INTERNI) {
                 //err_chyba = ERR_INTERNI;
                 return ERR_INTERNI;
             }
@@ -883,6 +1043,13 @@ int syntax_vyrazu() {
 
 
                     if(pom1.typ == MENSI) {
+                    
+                    		if(zasobnik_pristup(&zasobnik, &prvek_pomocny, 0)) {
+                    				//err_chyba = ERR_INTERNI;
+                            return ERR_INTERNI;
+                        } 
+                        
+                        pom_prvek.uk_na_prvek_ts = prvek_pomocny.uk_na_prvek_ts;
 
                         if(zasobnik_pop(&zasobnik) == ERR_INTERNI) {
                             //err_chyba = ERR_INTERNI;
@@ -914,7 +1081,7 @@ int syntax_vyrazu() {
                     break;
 
 
-                case OPPRAVAZAVORKA:
+                case OPPRAVAZAVORKA:        // redukce podle pravidla E -> (E)
 
                     if(zasobnik_pristup(&zasobnik, &pom1, 1) == ERR_INTERNI) {
                         //err_chyba = ERR_INTERNI;
@@ -934,6 +1101,13 @@ int syntax_vyrazu() {
                     pom2.typ = preved_z_tokenu(pom2.typ);
 
                     if((pom1.typ == NETERMINAL) && (pom2.typ == OPLEVAZAVORKA) && (pom3.typ == MENSI)) {
+                    
+                    		if(zasobnik_pristup(&zasobnik, &prvek_pomocny, 1)) {
+                    				//err_chyba = ERR_INTERNI;
+                            return ERR_INTERNI;
+                        } 
+                        
+                        pom_prvek.uk_na_prvek_ts = prvek_pomocny.uk_na_prvek_ts;
 
                         if(zasobnik_pop(&zasobnik) == ERR_INTERNI) {
                             //err_chyba = ERR_INTERNI;
@@ -954,8 +1128,11 @@ int syntax_vyrazu() {
                             //err_chyba = ERR_INTERNI;
                             return ERR_INTERNI;
                         }
+                        
+                        
 
 												pom_prvek.typ = NETERMINAL;
+												
 													
                         if(zasobnik_push(&zasobnik, pom_prvek) == ERR_INTERNI) {
                             //err_chyba = ERR_INTERNI;
@@ -974,7 +1151,7 @@ int syntax_vyrazu() {
                     break;
 
 
-                case NETERMINAL:
+                case NETERMINAL:            // redukce podle pravidla E -> E + E atd.
 
                     zasobnik_pristup(&zasobnik, &pom1, 1);
                     pom1.typ = preved_z_tokenu(pom1.typ);
@@ -1004,6 +1181,25 @@ int syntax_vyrazu() {
                         case OPMENSITKOROVNO:
                         case OPVETSITKOROVNO:
                         case OPKONKATENACE:
+                        
+                        
+                        		switch(pom1.typ) {
+                        		
+                        				case OPPLUS: typ_instrukce = IN_ADD; break;
+                        				case OPMINUS: typ_instrukce = IN_SUB; break;
+                        				case OPKRAT: typ_instrukce = IN_MUL; break;
+                        				case OPDELENO: typ_instrukce = IN_DIV; break;
+                        				case OPMOCNINA: typ_instrukce = IN_MOCN; break;
+                        				case OPJEROVNO: typ_instrukce = IN_ROVNO; break;
+                        				case OPNENIROVNO: typ_instrukce = IN_NEROVNO; break;
+                        				case OPMENSITKO: typ_instrukce = IN_MENSI; break;
+                        				case OPVETSITKO: typ_instrukce = IN_VETSI; break;
+                        				case OPMENSITKOROVNO: typ_instrukce = IN_MENROV; break;
+                        				case OPVETSITKOROVNO: typ_instrukce = IN_VETROV; break;
+                        				case OPKONKATENACE: typ_instrukce = IN_KONK; break;
+                        		
+                        		}
+                        		
 
                             if(zasobnik_pristup(&zasobnik, &pom1, 2) == ERR_INTERNI) {
                                 //err_chyba = ERR_INTERNI;
@@ -1016,6 +1212,34 @@ int syntax_vyrazu() {
                             }
 
                             if((pom1.typ == NETERMINAL) && (pom2.typ == MENSI)) {
+                            
+                            		//Vloz_instrukci(seznam instrukci, typ_instrukce, void *op1, void *op2, void *op3);
+                            
+
+																if(zasobnik_pristup(&zasobnik, &prvek_pomocny, 0)) {
+                    								//err_chyba = ERR_INTERNI;
+                            				return ERR_INTERNI;
+                        				} 
+                        				op2 = prvek_pomocny.uk_na_prvek_ts;
+                        				
+                        				if(zasobnik_pristup(&zasobnik, &prvek_pomocny, 2)) {
+                    								//err_chyba = ERR_INTERNI;
+                            				return ERR_INTERNI;
+                        				} 
+                        				op1 = prvek_pomocny.uk_na_prvek_ts;
+                        				
+                        				
+                        				
+                        				                       				
+                        				BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                        				BVSNajdi(pom_tab_sym, generuj_klic(1), &op3);
+                        				
+                        				
+                        				
+                        				Vloz_instrukci(&seznam_instrukci, typ_instrukce, &op1, &op2, &op3);
+                        				
+                        				
+                        
 
                                 if(zasobnik_pop(&zasobnik) == ERR_INTERNI) {
                                     //err_chyba = ERR_INTERNI;
@@ -1038,6 +1262,7 @@ int syntax_vyrazu() {
                                 }
 
 																pom_prvek.typ = NETERMINAL;
+																pom_prvek.uk_na_prvek_ts = op3;        
 													
 								                if(zasobnik_push(&zasobnik, pom_prvek) == ERR_INTERNI) {
                                     //err_chyba = ERR_INTERNI;

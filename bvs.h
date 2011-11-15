@@ -42,3 +42,10 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah);
 void BVSNahradZaPraveho(UkTBSUzel PtrReplaced, UkTBSUzel *Kor);
 void BVSVymaz (UkTBSUzel *Kor, char *K);
 void BVSZrus (UkTBSUzel *Kor);
+
+
+//dalsi by Paulie
+int Pole_realokuj(UkTBSUzel *ret, int delka);
+void Pole_uvolni(UkTBSUzel ret);
+int Pole_alokuj(UkTBSUzel *ret, int pocet);
+

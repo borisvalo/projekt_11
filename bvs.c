@@ -7,6 +7,7 @@
 
 #include "bvs.h"
 #include "str.h"
+#include "parser.h"
 
 //Inicializace stromu
 void BVSInit (UkTBSUzel *Kor) {
@@ -46,7 +47,12 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         ptr->puk = NULL;
         strcpy(ptr->klic, K); //vlozime klic
         ptr->data.typ = obsah->typ;
-        ptr->data.data = obsah->data;
+        if (ptr->data.typ == TDRETEZEC) {
+        				Ret_alokuj(&(ptr->data.data.dataRet), strlen(obsah->data.dataRet));
+        }
+        else {
+        				ptr->data.data = obsah->data;
+        }
         
         (*Kor) = ptr; //nakonec novy uzel vlozime primo do stromu
     }
@@ -120,6 +126,9 @@ void BVSZrus (UkTBSUzel *Kor) {
             BVSZrus(&(*Kor)->puk);
         }
         
+        if ((*Kor)->data.typ == TDRETEZEC) { // kvuli retezci, potrebujeme od-/alokovat novy prostor
+        				Ret_uvolni((*Kor)->data.data.dataRet);
+        }
         free(*Kor);
         (*Kor) = NULL;
     }
@@ -156,3 +165,43 @@ int main() {
     return 0;
 }
 */
+
+
+
+
+
+
+
+
+
+
+/*
+
+// FUNKCE PRO PRACI S POLEM STROMU
+
+//alokace pameti pro retezec
+int Pole_alokuj(UkTBSUzel *ret, int pocet) {
+    if (((*ret) = (TRetezec) malloc(pocet * sizeof(struct TBSUzel) )) == NULL) {
+        printf("chyba malloc!!\n");
+        return ERR_INTERNI;
+    }
+    return ERR_OK;
+}
+//uvolneni pameti alokovane pro retezec
+void Pole_uvolni(UkTBSUzel ret) {
+    free(ret);
+}
+
+//realokace pameti na potrebnou delku
+int Pole_realokuj(UkTBSUzel *ret, int delka) {
+    if (((*ret) = realloc((*ret), delka * sizeof(struct TBSUzel) )) == NULL) {
+        printf("chyba realokace!!\n");
+        return ERR_INTERNI;
+    }
+    return ERR_OK;
+}
+
+*/
+
+
+
