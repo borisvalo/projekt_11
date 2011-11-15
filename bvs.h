@@ -17,6 +17,7 @@ typedef enum enTTDat {
     TDCISLO,              //cislo
     TDRETEZEC,            //retezec
     TDBOOL,               //boolean
+    TDNIL,                //nil
 } TTDat;
 
 //struktura dat

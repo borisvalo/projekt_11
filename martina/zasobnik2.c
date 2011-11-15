@@ -1,8 +1,35 @@
+#define REALLOC_SOUSTO 4 // TODO: zmenit na vetsi pred odevzdanim
+                         // ZMENIT ZPATKY NA 2 - KVULI TESTOVANI ALOKACE
+
+                         // FUNKCE NA FREE ZASOBNIKU
+
+
+
 #include <stddef.h>
 #include <stdlib.h>
-#include "parser.h"
-#include "bvs.h"
-#include "zasobnik.h"
+
+
+// jestli to tam bude mit Pavel nebo co :-D
+typedef enum {
+
+    ERR_OK = 333,   // = bez chyb    // ZVOLIT TAM NEJAKE CISLO, TREBA 333 :-D
+    ERR_INTERNI,    // chyba pri praci se zasobnikem
+    ERR_SYNTAX,     // syntakticka chyba
+    ERR_SEMANT      // semanticka chyba
+
+} chybove_stavy;
+
+
+typedef struct stTPrvek {
+    int typ;   // typ tokenu
+    UkTBSPolozka uk_na_prvek_ts;
+} TPrvek;
+
+typedef struct stTZasobnik {
+    int top; //vrchol zasobniku
+    int velikost; //velikost alokovaneho prostoru
+    TPrvek * array; //data zasobniku
+} TZasobnik;
 
 
 /*
@@ -13,29 +40,11 @@ int zasobnik_init (TZasobnik *zas){
     if ((zas->array = malloc(REALLOC_SOUSTO*sizeof(TPrvek)))==NULL){    // k malloc musi byt free !!!
         return ERR_INTERNI;
     }
+    printf(">>>>>>>>>>>>>Pro me: sizeof(int) je %d, REALLOC_SOUSTO JE %d\n", sizeof(int), REALLOC_SOUSTO);
     zas->velikost = REALLOC_SOUSTO;
     zas->top = -1;
     return ERR_OK;
 }
-
-/*
-* Vynulovani zasobniku
-*/
-void zasobnik_vynuluj (TZasobnik *zas){
-    zas->top = -1;
-}
-
-
-
-
-/*
-* Uvolni dynamicky alokovanou pamet
-* @return = chybovy kod
-*/
-void zasobnik_free(TZasobnik *zas){
-	free(zas -> array);
-}
-
 
 /*
 * Vyjme hodnotu z vrcholu zasobniku a (!)nevrati
@@ -59,6 +68,8 @@ int zasobnik_push (TZasobnik *zas, TPrvek prvek){
             return ERR_INTERNI;
         }
         zas->velikost += REALLOC_SOUSTO;
+        printf(">>>Probehla realokace<<<\n");
+        printf(">>>>>>>>>>>>>Pro me: sizeof(int) je %d, REALLOC_SOUSTO JE %d, zas->velikost je %d\n", sizeof(TPrvek), REALLOC_SOUSTO, zas->velikost);
     }
     zas->top++;
     zas->array[zas->top] = prvek;
@@ -88,6 +99,14 @@ int zasobnik_pristup (TZasobnik *zas, TPrvek * hodn, int posun){
 */
 int zasobnik_top (TZasobnik *zas, TPrvek * hodn){
     return zasobnik_pristup(zas, hodn,0);
+}
+
+/*
+* Uvolni dynamicky alokovanou pamet
+* @return = chybovy kod
+*/
+int zasobnik_free(TZasobnik *zas){
+	free(zas -> array);
 }
 
 

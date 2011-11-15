@@ -1,0 +1,10 @@
+function main() 
+
+local a=3+2;
+local b;
+local c;
+local d;
+local e;
+
+sort( zkouaka, druha, treti);
+end ;

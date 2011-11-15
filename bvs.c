@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include "bvs.h"
-#include "string.h"
+#include "str.h"
 
 //Inicializace stromu
 void BVSInit (UkTBSUzel *Kor) {

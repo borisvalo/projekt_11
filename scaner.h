@@ -31,9 +31,9 @@ typedef enum {
     KRAT,          // *
     DELENO,        // :
     KONKATENACE,   // ..
-    ROVNASEKONEC,  // =
     POROVNANI,     // ==
     MOCNINA,       // ^
+    ROVNASEKONEC,  // =
     VETSIROVNO,    // >=
     VETSITKOKONEC, // >
     MENSIROVNO,    // <=
@@ -61,6 +61,6 @@ typedef struct stTToken {
 } TToken, *UkTToken;
 
 // FUNKCE:
-void token_alokuj(UkTToken *strukt);
+int token_alokuj(UkTToken *strukt);
 void token_uvolni(UkTToken strukt);
 int ziskej_dalsi_token(FILE *f, UkTToken strukt);

@@ -6,18 +6,21 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "string.h"
+#include "str.h"
 #include "obecne.h"
 #include "scaner.h"
+#include "parser.h"
 
 //funkce pro alokovani pameti tokenu
-void token_alokuj(UkTToken *strukt) {
+int token_alokuj(UkTToken *strukt) {
     if (((*strukt) = (UkTToken) malloc(sizeof(TToken))) == NULL) {
         printf("chyba mallocu!!");
+        return ERR_INTERNI;
     }
     //Ret_alokuj(&((*strukt)->data), MIN_ARR);
     (*strukt)->data = NULL;
     (*strukt)->delka = MIN_ARR;
+    return ERR_OK;
 }
 
 //funkce pro uvolneni tokenu
@@ -54,7 +57,6 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
     
     while (1) {
         symbol = getc(f); //precteni znaku ze souboru
-        
         //AUTOMAT ---------------------------------------
         switch (stav) {
             //...........................................
