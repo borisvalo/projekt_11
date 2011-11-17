@@ -1,16 +1,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "interpret.h"
+#include <math.h>
 
-void Vloz_instrukci(UkTSezInstr seznam, int typ, void *op1, void *op2, void *op3) {
+#include "interpret.h"
+#include "string.h"
+#include "bvs.h"
+//#include "ial.c"
+
+int Vloz_instrukci(UkTSezInstr seznam, int typ, void *op1, void *op2, void *op3) {
     TInstr polozka;
+    
     polozka.typInstr = typ;
     polozka.op1 = op1;
     polozka.op2 = op2;
     polozka.op3 = op3;
     
     Sez_vloz(seznam, &polozka);
+    
+    return KONEC_OK;
 }
 
 int Interpret(UkTSezInstr list) {
@@ -18,25 +26,22 @@ int Interpret(UkTSezInstr list) {
     UkTInstr ukinstr;
     
     while (1) {
-        ukinstr = Sez_hodnota_aktivniho(list); //nahrajeme dalsi instrukci
+        ukinstr = Sez_hodnota_aktivniho(list); //nahrajeme aktivni instrukci
         
         switch (ukinstr->typInstr) { //automat
-            //zadna operace
-            case IN_NOOP:
-                break;
-                
             //cteni
             case IN_READ:
                 break;
                 
             //vypis
             case IN_WRITE:
+                //write(ukinstr->op1);
                 break;
                 
             //soucet
             case IN_ADD:
-                if (ukinstr->op1->typ == TDCISLO && ukinstr->op2->typ == TDCISLO) {
-                    ukinstr->op3->data.dataCis = ukinstr->op1->data.dataCiss + ukinstr->op2->data.dataCis;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    ((UkTBSPolozka)ukinstr->op3)->data.dataCis = ((UkTBSPolozka)ukinstr->op1)->data.dataCis + ((UkTBSPolozka)ukinstr->op2)->data.dataCis;
                 }
                 else {
                     printf("semanticka chyba\n");
@@ -45,8 +50,8 @@ int Interpret(UkTSezInstr list) {
             
             //odcitani
             case IN_SUB:
-                if (ukinstr->op1->typ == TDCISLO && ukinstr->op2->typ == TDCISLO) {
-                    ukinstr->op3->data.dataCis = ukinstr->op1->data.dataCis - ukinstr->op2->data.dataCis;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    ((UkTBSPolozka)ukinstr->op3)->data.dataCis = ((UkTBSPolozka)ukinstr->op1)->data.dataCis - ((UkTBSPolozka)ukinstr->op2)->data.dataCis;
                 }
                 else {
                     printf("semanticka chyba\n");
@@ -55,8 +60,8 @@ int Interpret(UkTSezInstr list) {
             
             //nasobeni
             case IN_MUL:
-                if (ukinstr->op1->typ == TDCISLO && ukinstr->op2->typ == TDCISLO) {
-                    ukinstr->op3->data.dataCis = ukinstr->op1->data.dataCis * ukinstr->op2->data.dataCis;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    ((UkTBSPolozka)ukinstr->op3)->data.dataCis = ((UkTBSPolozka)ukinstr->op1)->data.dataCis * ((UkTBSPolozka)ukinstr->op2)->data.dataCis;
                 }
                 else {
                     printf("semanticka chyba\n");
@@ -65,8 +70,22 @@ int Interpret(UkTSezInstr list) {
                 
             //deleni
             case IN_DIV:
-                if (ukinstr->op1->typ == TDCISLO && ukinstr->op2->typ == TDCISLO) {
-                    ukinstr->op3->data.dataCis = ukinstr->op1->data.dataCis / ukinstr->op2->data.dataCis;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    if (((UkTBSPolozka)ukinstr->op2)->data.dataCis == 0) {
+                        printf("chyba: deleni nulou!!\n");
+                        return KONEC_CHYBA;
+                    }
+                    ((UkTBSPolozka)ukinstr->op3)->data.dataCis = ((UkTBSPolozka)ukinstr->op1)->data.dataCis / ((UkTBSPolozka)ukinstr->op2)->data.dataCis;
+                }
+                else {
+                    printf("semanticka chyba\n");
+                }
+                break;
+                
+            //mocnina
+            case IN_MOCN:
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    ((UkTBSPolozka)ukinstr->op3)->data.dataCis = pow(((UkTBSPolozka)ukinstr->op1)->data.dataCis, ((UkTBSPolozka)ukinstr->op2)->data.dataCis);
                 }
                 else {
                     printf("semanticka chyba\n");
@@ -74,7 +93,8 @@ int Interpret(UkTSezInstr list) {
                 break;
             
             //navesti
-            case IN_LABEL:
+            case IN_NVSTI:
+                //ukinstr->op1 = list->aktivni;
                 break;
                 
             //goto - nastavi aktivitu na konkretni prvek
@@ -84,106 +104,150 @@ int Interpret(UkTSezInstr list) {
                 
             //mensi <
             case IN_MENSI:
-                if (ukinstr->op1->typ == TDCISLO) {
-                    if (ukinstr->op1->data.dataCis < ukinstr->op2->data.dataCis) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    if (((UkTBSPolozka)ukinstr->op1)->data.dataCis < ((UkTBSPolozka)ukinstr->op2)->data.dataCis) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
                 }
-                else if (ukinstr->op1->typ == TDRETEZEC) {
-                    if ((strcmp(ukinstr->op1->data.dataRet, ukinstr->op2->data.dataRet)) < 0) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
+                    if ((strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet)) < 0) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
+                }
+                else {
+                    return KONEC_CHYBA;
                 }
                 break;
                 
             //vetsi >
             case IN_VETSI:
-                if (ukinstr->op1->typ == TDCISLO) {
-                    if (ukinstr->op1->data.dataCis > ukinstr->op2->data.dataCis) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    if (((UkTBSPolozka)ukinstr->op1)->data.dataCis > ((UkTBSPolozka)ukinstr->op2)->data.dataCis) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
                 }
-                else if (ukinstr->op1->typ == TDRETEZEC) {
-                    if ((strcmp(ukinstr->op1->data.dataRet, ukinstr->op2->data.dataRet)) > 0) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
+                    if ((strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet)) > 0) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
+                }
+                else {
+                    return KONEC_CHYBA;
                 }
                 break;
                 
             //mensi nebo rovno <=
             case IN_MENROV:
-                if (ukinstr->op1->typ == TDCISLO) {
-                    if (ukinstr->op1->data.dataCis <= ukinstr->op2->data.dataCis) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    if (((UkTBSPolozka)ukinstr->op1)->data.dataCis <= ((UkTBSPolozka)ukinstr->op2)->data.dataCis) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
                 }
-                else if (ukinstr->op1->typ == TDRETEZEC) {
-                    if ((strcmp(ukinstr->op1->data.dataRet, ukinstr->op2->data.dataRet)) <= 0) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
+                    if ((strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet)) <= 0) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
+                }
+                else {
+                    return KONEC_CHYBA;
                 }
                 break;
                 
             //vetsi nebo rovno >=
             case IN_VETROV:
-                if (ukinstr->op1->typ == TDCISLO) {
-                    if (ukinstr->op1->data.dataCis >= ukinstr->op2->data.dataCis) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    if (((UkTBSPolozka)ukinstr->op1)->data.dataCis >= ((UkTBSPolozka)ukinstr->op2)->data.dataCis) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
                 }
-                else if (ukinstr->op1->typ == TDRETEZEC) {
-                    if ((strcmp(ukinstr->op1->data.dataRet, ukinstr->op2->data.dataRet)) >= 0) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
+                    if ((strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet)) >= 0) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
+                }
+                else {
+                    return KONEC_CHYBA;
                 }
                 break;
                 
             //rovna se ==
             case IN_ROVNO:
-                if (ukinstr->op1->typ == TDCISLO) {
-                    if (ukinstr->op1->data.dataCis == ukinstr->op2->data.dataCis) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    if (((UkTBSPolozka)ukinstr->op1)->data.dataCis == ((UkTBSPolozka)ukinstr->op2)->data.dataCis) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
                 }
-                else if (ukinstr->op1->typ == TDRETEZEC) {
-                    if ((strcmp(ukinstr->op1->data.dataRet, ukinstr->op2->data.dataRet)) == 0) {
-                        ukinstr->op3->data.dataBool = TRUE;
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
+                    if ((strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet)) == 0) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
                     }
                     else {
-                        ukinstr->op3->data.dataBool = FALSE;
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
                     }
+                }
+                else {
+                    return KONEC_CHYBA;
                 }
                 break;
-                
+            
+            //nerovna se ~=
+            case IN_NEROVNO:
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
+                    if (((UkTBSPolozka)ukinstr->op1)->data.dataCis != ((UkTBSPolozka)ukinstr->op2)->data.dataCis) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
+                    }
+                    else {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
+                    }
+                }
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
+                    if ((strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet)) != 0) {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = TRUE;
+                    }
+                    else {
+                        ((UkTBSPolozka)ukinstr->op3)->data.dataBool = FALSE;
+                    }
+                }
+                else {
+                    return KONEC_CHYBA;
+                }
+                break;
+            
+            //konkatenace
             case IN_KONK:
-                //zavolani funkce konkatenace
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
+                    Ret_konkatenace(((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet, &(((UkTBSPolozka)ukinstr->op3)->data.dataRet));
+                }
+                else {
+                    printf("semanticka chyba\n");
+                }
                 break;
                 
             case IN_TYPE:
@@ -195,11 +259,28 @@ int Interpret(UkTSezInstr list) {
                 break;
                 
             case IN_SORT:
-                //zavolani funkce sort()
+                //strcpy(strcmp(((UkTBSPolozka)ukinstr->op3)->data.dataRet, strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet);
+                //heapsort(strcmp(((UkTBSPolozka)ukinstr->op3)->data.dataRet);
                 break;
                 
             case IN_SUBSTR:
                 //zavolani funkce substr()
+                break;
+                
+            //operace prirazeni
+            case IN_PRIRAD:
+                if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO) {
+                    ((UkTBSPolozka)ukinstr->op3)->data.dataCis = ((UkTBSPolozka)ukinstr->op1)->data.dataCis;
+                }
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC) {
+                    strcpy(((UkTBSPolozka)ukinstr->op3)->data.dataRet, ((UkTBSPolozka)ukinstr->op1)->data.dataRet);
+                }
+                else if (((UkTBSPolozka)ukinstr->op1)->typ == TDBOOL) {
+                    ((UkTBSPolozka)ukinstr->op3)->data.dataBool = ((UkTBSPolozka)ukinstr->op1)->data.dataBool;
+                }
+                else {
+                    return KONEC_CHYBA;
+                }
                 break;
                 
             //konec interpretu
@@ -209,6 +290,8 @@ int Interpret(UkTSezInstr list) {
             default:
                 break;
         }
+        
+        Sez_dalsi(list); //presuneme se na dalsi instrukci
     }
     
     return KONEC_OK;
