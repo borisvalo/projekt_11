@@ -47,6 +47,9 @@ typedef struct {
   void *op3;                 // adresa 3
 } TInstr, *UkTInstr;
 
+
+/* SEZNAM instrukcí */
+
 //struktura pro polozky seznamu
 typedef struct plzkaSez {
   TInstr instrukce;          //ukazatel na strukturu instrukce
@@ -59,6 +62,29 @@ typedef struct {
   struct plzkaSez *posledni; // posledni polozka
   struct plzkaSez *aktivni;  // aktivni polozka
 } TSezInstr, *UkTSezInstr;
+
+
+/* SEZNAM paramtrů fcí */
+
+//struktura uzlu
+typedef struct promennaPar {
+	char           *klic; //retezec slouzici jako klic
+	TBSPolozka      data; //ukazatel na strukturu dat
+} TPromennaPar, *TPromennaPar;
+
+//struktura pro polozky seznamu
+typedef struct plzkaSezPar {
+  TParam parametr;          //ukazatel na strukturu instrukce
+  struct plzkaSezPar *ukdalsi;  //ukazatel na dalsi prvek seznamu
+} TPlzkaSezPar, *UkTPlzkaSezPar;
+
+//struktura celeho seznamu
+typedef struct {
+  struct plzkaSezPar *prvni;    // prvni polozka
+  struct plzkaSezPar *aktivni;  // aktivni polozka
+} TSezPar, *UkTSezPar;
+
+
 
 //FUNKCE --------------------------------------------------
 

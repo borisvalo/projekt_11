@@ -3,11 +3,13 @@
 
 #include "interpret.h"
 
+/* SEZNAM pro instrukce */
+
 // inicializace seznamu
 void Sez_init(UkTSezInstr L) {
 	L->aktivni = NULL;
 	L->prvni = NULL;
-    L->posledni = NULL;
+  L->posledni = NULL;
 }
 
 // zruseni celeho seznamu
@@ -95,3 +97,97 @@ int main() {
     
     return 0;
 }
+
+
+
+
+
+/* SEZNAM pro parametry funkce */
+
+
+// inicializace seznamu
+void Sez_init(UkTSezPar L) {
+	L->aktivni = NULL;
+	L->prvni = NULL;
+}
+
+
+// zruseni celeho seznamu
+void Sez_zrus(UkTSezPar L) {
+	UkTPlzkaSezPar PomUk;
+	while (L->prvni != NULL) {
+		PomUk = L->prvni->ukdalsi;
+		free(L->prvni);
+		L->prvni = PomUk;
+	}
+    L->aktivni = NULL;
+}
+
+// vlozeni prvku do seznamu
+int insert_last(UkTSezPar L, TToken token) {
+	UkTPlzkaSezPar PomUk;
+	if ((PomUk = malloc(sizeof(TPlzkaSezPar))) == NULL) {
+		printf("chyba mallocu\n");
+		return ERR_INTERNI;
+	}
+	PomUk->ukdalsi = NULL;
+	if((pomUk->parametr.klic = malloc(token->delka*sizeof(char)))==NULL) {
+		return ERR_INTERNI;
+	}
+  strcpy(PomUk->parametr.klic, token->data);
+  PomUk->parametr.data.typ = TDNIL;
+  
+  if (L->prvni == NULL) { //seznam je prazdny
+      L->prvni = PomUk;
+      L->aktivni = PomUk;
+  }
+  else {
+  	while (L->aktivni != NULL){ // pruchodu bude malo, protoze byvame uz na poslednim
+  		L->aktivni = L->aktivni->ukdalsi;
+  	}
+    L->aktivni->ukdalsi = PomUk;
+  }
+}
+
+// nastaveni aktivity na prvni prvek
+void set_first(UkTSezPar L) {
+    L->aktivni = L->prvni;
+}
+// nastavi aktivitu na dalsi prvek
+void set_nasl(UkTSezPar L) {
+    if (L->aktivni != NULL) {
+        L->aktivni = L->aktivni->ukdalsi;
+    }
+}
+// vraci odkaz na strukturu instrukce
+void *hodnota_aktivniho(UkTSezPar L) {
+  if (L->aktivni == NULL) {
+      printf("chybka - seznam neni aktivni..\n");
+      return NULL;
+  }
+  
+	return &(L->aktivni->parametr);
+}
+
+void zmen_data_par(UkTSezPar L, TToken token){
+	switch(token->typ){
+		case RETEZEC: if ((L->aktivni->parametr.data.dataRet = malloc(token->delka*sizeof(char)))==NULL){
+										return ERR_INTERNI;
+									}
+									strcpy(	L->aktivni->parametr.data.dataRet, token->data );
+									L->aktivni->parametr.data.typ = TDRETEZEC;
+									break;
+		case INTKONEC:
+    case DESKONEC:	
+    case EXPKONEC: 	L->aktivni->parametr.data.typ = TDCISLO;
+    								L->aktivni->parametr.data.dataCis = atof(token->data);
+    								break;
+    case TNTRUE: 	L->aktivni->parametr.data.typ = TDBOOL;
+    							L->aktivni->parametr.data.dataBool = TRUE;
+    							break;
+    case TNFALSE:	L->aktivni->parametr.data.typ = TDBOOL;
+    							L->aktivni->parametr.data.dataBool = FALSE;
+    							break;
+	}
+}
+

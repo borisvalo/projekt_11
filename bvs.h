@@ -5,6 +5,26 @@
 #define KONEC_OK     0
 #define KONEC_CHYBA  1
 
+
+
+//---------------- struktury pro BVS funkci ------------------
+typedef struct bsfunkuzel {
+int pocet_param; // promenna pro ulozeni poctu parametru funkce
+struct bsuzel *koren; // koren tabulky symbolu dane fce
+//struct 
+
+} TBSFunkUzel, *UkTBSFunkUzel;
+
+typedef struct bsfunkce {
+char *klic; //retezec slouzici jako klic - nazev funkce
+TBSFunkUzel data; //ukazatel na strukturu dat
+
+struct bsfunkce *luk; //ukazatel na leveho potomka
+struct bsfunkce *puk; //ukazatel na praveho potomka
+} TBSFunkce, *UkTBSFunkce;
+
+
+
 //samotna data
 typedef union {
     double   dataCis;     //datovy typ number
