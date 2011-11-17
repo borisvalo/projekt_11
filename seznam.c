@@ -106,14 +106,14 @@ int main() {
 
 
 // inicializace seznamu
-void Sez_init(UkTSezPar L) {
+void Sez_init_funkce(UkTSezPar L) {
 	L->aktivni = NULL;
 	L->prvni = NULL;
 }
 
 
 // zruseni celeho seznamu
-void Sez_zrus(UkTSezPar L) {
+void Sez_zrus_funkce(UkTSezPar L) {
 	UkTPlzkaSezPar PomUk;
 	while (L->prvni != NULL) {
 		PomUk = L->prvni->ukdalsi;
@@ -190,4 +190,15 @@ void zmen_data_par(UkTSezPar L, TToken token){
     							break;
 	}
 }
-
+int najdi_prvek(UkTSezPar L, char *K){
+		set_first(L);
+		while(L->aktivni != NULL){
+			if(strcmp(L->aktivni->klic, K) == 0){
+					return TRUE;
+			}
+			
+			set_nasl(L);
+		}
+		
+		return FALSE;
+}

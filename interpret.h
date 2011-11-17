@@ -28,6 +28,7 @@ typedef enum nazvyInstrukci {
     IN_ROVNO,            // ==              in      in      out
     IN_NEROVNO,            // ==              in      in      out
     IN_KONK,             // ..              in      in      out
+    IN_PRIRAZENI,
     IN_KONEC,            //konec interpretu
 
     IN_TYPE,             // type()
@@ -69,19 +70,19 @@ typedef struct {
 //struktura uzlu
 typedef struct promennaPar {
 	char           *klic; //retezec slouzici jako klic
-	TBSPolozka      data; //ukazatel na strukturu dat
-} TPromennaPar, *TPromennaPar;
+	struct bsdata   *data; //ukazatel na strukturu dat
+} TPromennaPar, *UkTPromennaPar;
 
 //struktura pro polozky seznamu
 typedef struct plzkaSezPar {
-  TParam parametr;          //ukazatel na strukturu instrukce
+  struct promennaPar parametr;          //ukazatel na strukturu instrukce
   struct plzkaSezPar *ukdalsi;  //ukazatel na dalsi prvek seznamu
 } TPlzkaSezPar, *UkTPlzkaSezPar;
 
 //struktura celeho seznamu
-typedef struct {
-  struct plzkaSezPar *prvni;    // prvni polozka
-  struct plzkaSezPar *aktivni;  // aktivni polozka
+typedef struct sezPar{
+  struct TPlzkaSezPar *prvni;    // prvni polozka
+  struct TPlzkaSezPar *aktivni;  // aktivni polozka
 } TSezPar, *UkTSezPar;
 
 
@@ -99,3 +100,13 @@ void Sez_nastav_aktivni(UkTSezInstr L, void *instrukce);
 
 //funkce interpretu
 void Vloz_instrukci(UkTSezInstr seznam, int typ, void *op1, void *op2, void *op3);
+
+// funkce na seznamem/zasobnikem parametru funkci
+void Sez_init_funkce(UkTSezPar L);
+void Sez_zrus_funkce(UkTSezPar L);
+int insert_last(UkTSezPar L, UkTToken token);
+void set_first(UkTSezPar L);
+void set_nasl(UkTSezPar L);
+void *hodnota_aktivniho(UkTSezPar L);
+void zmen_data_par(UkTSezPar L, UkTToken token);
+int najdi_prvek(UkTSezPar L, char *K);

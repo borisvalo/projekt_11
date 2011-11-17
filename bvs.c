@@ -9,6 +9,7 @@
 #include "str.h"
 #include "parser.h"
 
+//---------------- BVS pro lokalni promenne ------------------------
 //Inicializace stromu
 void BVSInit (UkTBSUzel *Kor) {
     (*Kor) = NULL;
@@ -69,7 +70,7 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         }
     }
 }
-
+/*
 void BVSNahradZaPraveho(UkTBSUzel PtrReplaced, UkTBSUzel *Kor) {
 	UkTBSUzel pom;
     pom = NULL;
@@ -116,7 +117,7 @@ void BVSVymaz (UkTBSUzel *Kor, char *K) {
         }
     }
 } 
-
+*/
 void BVSZrus (UkTBSUzel *Kor) {	
     if ((*Kor) != NULL) {
         if ((*Kor)->luk != NULL) {
@@ -133,75 +134,78 @@ void BVSZrus (UkTBSUzel *Kor) {
         (*Kor) = NULL;
     }
 }
+//------------------ Konec funkci pro lok. promenne ------------------
 
-/*
-int main() {
-    TBSUzel str;
-    UkTBSUzel strom;
-    strom = &str;
-    BVSInit(&strom);
-    
-    //pridani cisla
-    TBSPolozka polozka1;
-    polozka1.typ = TDCISLO;
-    polozka1.data.dataCis = 10;
-    BVSVloz(&strom, "prvni", &polozka1);
-    
-    //pridani bool hodnoty
-    TBSPolozka polozka2;
-    polozka2.typ = TDCISLO;
-    polozka2.data.dataBool = TRUE;
-    BVSVloz(&strom, "druhy", &polozka2);
-    
-    //pridani retezce - nutnost alokace!!!
-    TBSPolozka polozka3;
-    polozka3.typ = TDCISLO;
-    Ret_alokuj(&(polozka3.data.dataRet), 10);
-    strcpy(polozka3.data.dataRet, "ret");
-    BVSVloz(&strom, "treti", &polozka3);
-    
-    BVSZrus(&strom);
-    
-    return 0;
-}
-*/
+//------------------ Funkce pro BVS Funkci -------------------------
+void BVSFunkceInit (UkTBSFunkce *Kor) {
+    (*Kor) = NULL;
+}	
 
-
-
-
-
-
-
-
-
-
-/*
-
-// FUNKCE PRO PRACI S POLEM STROMU
-
-//alokace pameti pro retezec
-int Pole_alokuj(UkTBSUzel *ret, int pocet) {
-    if (((*ret) = (TRetezec) malloc(pocet * sizeof(struct TBSUzel) )) == NULL) {
-        printf("chyba malloc!!\n");
-        return ERR_INTERNI;
+int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol obsah)	{
+	if (Kor == NULL) { //neni v cem hledat
+        return FALSE;
     }
-    return ERR_OK;
-}
-//uvolneni pameti alokovane pro retezec
-void Pole_uvolni(UkTBSUzel ret) {
-    free(ret);
-}
+    else {
+        if (strcmp(Kor->klic, K) != 0) {
+            if (strcmp(Kor->klic, K) > 0) { //doleva
+                return BVSFunkceNajdi(Kor->luk, K, obsah);
+            }
+            else { //doprava
+                return BVSFunkceNajdi(Kor->puk, K, obsah);
+            }
+        }
+        else {
+            obsah = &(Kor->data); //vratime ukazatel na strukturu dat
+            return TRUE;
+        }
+    }	
+} 
 
-//realokace pameti na potrebnou delku
-int Pole_realokuj(UkTBSUzel *ret, int delka) {
-    if (((*ret) = realloc((*ret), delka * sizeof(struct TBSUzel) )) == NULL) {
-        printf("chyba realokace!!\n");
-        return ERR_INTERNI;
+void BVSFunkceVloz (UkTBSFunkce* Kor, char *K, UkTBSFunkPol obsah) {	
+	if ((*Kor) == NULL) { //vytvorime novy uzel
+        UkTBSFunkce ptr;
+        if ((ptr = (UkTBSFunkce) malloc(sizeof(TBSFunkce))) == NULL) {
+            printf("chyba mallocu!\n");
+        }
+        
+        Ret_alokuj(&(ptr->klic), 10); //alokujeme misto pro klic
+        
+        ptr->luk = NULL;
+        ptr->puk = NULL;
+        strcpy(ptr->klic, K); //vlozime klic
+        
+        ptr->data.pocet_param = 0;
+        ptr->data.koren = NULL;
+        ptr->data.zasobnik = NULL;
+        
+        (*Kor) = ptr; //nakonec novy uzel vlozime primo do stromu
     }
-    return ERR_OK;
+    else { //aktualni ukazatel ukazuje na existujici uzel
+        if (strcmp(K, (*Kor)->klic) < 0) { //dame se do leveho podstromu
+            BVSFunkceVloz(&((*Kor)->luk), K, obsah);
+        }
+        else if (strcmp(K, (*Kor)->klic) > 0) { //dame se do praveho podstromu
+            BVSFunkceVloz(&((*Kor)->puk), K, obsah);
+        }
+        else { //obnovime data aktualniho uzlu
+			if(obsah != NULL){
+				(*Kor)->data.pocet_param = obsah->pocet_param;
+				(*Kor)->data.koren = obsah->koren;
+				(*Kor)->data.zasobnik = obsah->zasobnik;
+			}
+        }
+    }
 }
+void BVSFunkceZrus (UkTBSFunkce *Kor) {	
+    if ((*Kor) != NULL) {
+        if ((*Kor)->luk != NULL) {
+            BVSFunkceZrus(&(*Kor)->luk);
+        }
+        if ((*Kor)->puk != NULL) {
+            BVSFunkceZrus(&(*Kor)->puk);
+        }
 
-*/
-
-
-
+        free(*Kor);
+        (*Kor) = NULL;
+    }
+}

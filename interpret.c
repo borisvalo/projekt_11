@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "interpret.h"
+#include "bvs.h"
 
 void Vloz_instrukci(UkTSezInstr seznam, int typ, void *op1, void *op2, void *op3) {
     TInstr polozka;

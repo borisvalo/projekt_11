@@ -8,16 +8,16 @@
 
 
 //---------------- struktury pro BVS funkci ------------------
-typedef struct bsfunkuzel {
+typedef struct bsfunkpol {
 int pocet_param; // promenna pro ulozeni poctu parametru funkce
 struct bsuzel *koren; // koren tabulky symbolu dane fce
-//struct 
+struct sezPar *zasobnik;
 
-} TBSFunkUzel, *UkTBSFunkUzel;
+} TBSFunkPol, *UkTBSFunkPol;
 
 typedef struct bsfunkce {
 char *klic; //retezec slouzici jako klic - nazev funkce
-TBSFunkUzel data; //ukazatel na strukturu dat
+struct bsfunkpol data; //ukazatel na strukturu dat
 
 struct bsfunkce *luk; //ukazatel na leveho potomka
 struct bsfunkce *puk; //ukazatel na praveho potomka
@@ -26,7 +26,7 @@ struct bsfunkce *puk; //ukazatel na praveho potomka
 
 
 //samotna data
-typedef union {
+typedef union unidata {
     double   dataCis;     //datovy typ number
     char    *dataRet;     //datovy typ string
     int      dataBool;    //datovy typ boolean
@@ -42,14 +42,14 @@ typedef enum enTTDat {
 
 //struktura dat
 typedef struct bsdata {
-    TTDat   typ;          //typ dat
+    int typ;          //typ dat
     TBSData data;         //union s daty
 } TBSPolozka, *UkTBSPolozka;
 
 //struktura uzlu
 typedef struct bsuzel {
 	char           *klic; //retezec slouzici jako klic
-	TBSPolozka      data; //ukazatel na strukturu dat
+	struct bsdata      data; //ukazatel na strukturu dat
     
 	struct bsuzel   *luk; //ukazatel na leveho potomka
 	struct bsuzel   *puk; //ukazatel na praveho potomka
@@ -69,3 +69,7 @@ int Pole_realokuj(UkTBSUzel *ret, int delka);
 void Pole_uvolni(UkTBSUzel ret);
 int Pole_alokuj(UkTBSUzel *ret, int pocet);
 
+void BVSFunkceInit (UkTBSFunkce *Kor);
+int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol obsah);
+void BVSFunkceVloz (UkTBSFunkce *Kor, char *K, UkTBSFunkPol obsah);
+void BVSFunkceZrus (UkTBSFunkce *Kor);
