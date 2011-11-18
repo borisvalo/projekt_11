@@ -1,51 +1,91 @@
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
 #include <stdio.h>
-#include "main.h"
+#include <string.h>
+#include "scaner.h"
+#include "zasobnik.h"
+#include "str.h"
+#include "parser.h"
+#include "bvs.h"
+#include "interpret.h"
 /*
  * Autor: Pavel Slabý, xslaby00
  * 				a další
  * Datum odevzdání: 11.12.2011
  */
  
-#define ERR_OK 0
-#define ERR_LEX 1
-#define ERR_SYNTAX 2
-#define ERR_SEMANT 3
-#define ERR_INTERPRET 4
-#define ERR_INTERNI 5
 
 
-int main(int argc, char** argv)){
-	FILE *soubor;
-	if (argc == 1)
-	{
-		printf("Nezadan argument\n");
-		return FILE_ERROR;
+
+UkTToken token;
+FILE *soubor;
+int chyba;
+TZasobnik zasobnik;
+UkTBSUzel tab_sym;
+UkTBSUzel pom_tab_sym;
+UkTBSUzel nazvy_funkci; // kam odkazuje navesti
+UkTBSPolozka obsah;
+UkTSezInstr seznam_instrukci;
+unsigned int klic_cislo=0;
+TPrvek prvek_pomocny;
+int typ_instrukce;
+void *op1; 
+void *op2; 
+void *op3;
+
+// ---- nove pridano
+UkTBSFunkce strom_funkci;
+UkTBSFunkPol pom_uzel_funkce;
+char *pom_token_data;
+// --- konec novyho
+
+
+UkTBSUzel pole_stromu;
+int delka_pole_stromu;
+
+int main(){
+	
+	
+	printf("main: prvni kontrola\n");
+	chyba = ERR_OK;
+	if ((soubor = fopen("kod", "r")) == NULL) {
+		printf("main: otevreni souboru\n");
+		return ERR_INTERNI;
+  }
+	printf("main: druha kontrola\n");
+	chyba=token_alokuj(&token);
+	if (chyba!=ERR_OK){
+		//TODO: zavrit soubor
+		return chyba;
 	}
-	if ((f = fopen(argv[1], "r")) == NULL)
-	{
-		printf("Nepodarilo se otevrit soubor\n");
-		return FILE_ERROR;
+	chyba = zasobnik_init( &zasobnik);
+	if (chyba!=ERR_OK){
+	//TODO: zavrit soubor
+	// odalokovat token
+		return chyba;
+	}
+	seznam_instrukci = malloc(sizeof(struct seznamInstr));
+	Sez_init(seznam_instrukci);
+	//seznam_instrukci = malloc(sizeof(struct bsfunkce));
+	//Sez_init_funkce(strom_funkci);
+	delka_pole_stromu=1;
+	
+	if ((obsah = malloc(sizeof (TBSPolozka)))==NULL){
+		return ERR_INTERNI;
 	}
 	
-	tTabulkaSymbolu TabulkaSymbolu;
-	tabInit(&TabulkaSymbolu);
+	chyba = syntakticky_analyzator();
 	
-	tVnitrni vnitrni;//TODO:
-	
-	kodChyby = syntakticky_analyzator(&TabulkaSymbolu, &vnitrni);
-	
-	
-	
-	//(TODO: )odalokování zdrojů
+	token_uvolni(token);
+	zasobnik_free(&zasobnik);
 	fclose(soubor);
-	tableDispose(&TabulkaSymbolu);
 	
-	if(kodChyby!=ERR_OK){
-		//TODO: odalokuj vnitrni
-		return kodChyby;
+	if (chyba != ERR_OK){
+		printf(" ----- VSTUP NEPRIJAT s kodem: %d ------\n",chyba);
+		return chyba;
+	}else{
+		printf(" ----- VSTUP PRIJAT ----- \n");
+		return ERR_OK;
 	}
-	
-	interpretuj(&vnitrni);
-	
-	return ERR_OK;
-}
+} 

@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "scaner.h"
 #include "interpret.h"
-
+#include "bvs.h"
+#include "parser.h"
 /* SEZNAM pro instrukce */
 
+extern UkTToken token;
 // inicializace seznamu
 void Sez_init(UkTSezInstr L) {
 	L->aktivni = NULL;
@@ -35,7 +39,6 @@ void Sez_vloz(UkTSezInstr L, UkTInstr instr) {
     PomUk->instrukce.op1 = instr->op1;
     PomUk->instrukce.op2 = instr->op2;
     PomUk->instrukce.op3 = instr->op3;
-    
     if (L->prvni == NULL) { //seznam je prazdny
         L->prvni = PomUk;
     }
@@ -44,7 +47,6 @@ void Sez_vloz(UkTSezInstr L, UkTInstr instr) {
     }
     
     L->posledni = PomUk;
-    printf("%d\n", L->posledni->instrukce.typInstr);
 }
 
 // nastaveni aktivity na prvni prvek
@@ -74,34 +76,6 @@ void Sez_nastav_aktivni(UkTSezInstr L, UkTPlzkaSez instrukce) {
     L->aktivni = instrukce;
 }
 
-int main() {
-    TSezInstr sez;
-    UkTSezInstr seznam;
-    seznam = &sez;
-    Sez_init(seznam);
-    
-    int cislo;
-    cislo = 5;
-    
-    TInstr instr1;
-    instr1.typInstr = IN_ADD;
-    instr1.op1 = (int *) &cislo;
-    instr1.op2 = NULL;
-    instr1.op3 = NULL;
-    
-    Sez_vloz(seznam, &instr1);
-    int *c = seznam->prvni->instrukce.op1;
-    printf("%d\n", *c);
-    
-    Sez_zrus(seznam);
-    
-    return 0;
-}
-
-
-
-
-
 /* SEZNAM pro parametry funkce */
 
 
@@ -109,6 +83,7 @@ int main() {
 void Sez_init_funkce(UkTSezPar L) {
 	L->aktivni = NULL;
 	L->prvni = NULL;
+	L->posledni = NULL;
 }
 
 
@@ -124,29 +99,34 @@ void Sez_zrus_funkce(UkTSezPar L) {
 }
 
 // vlozeni prvku do seznamu
-int insert_last(UkTSezPar L, TToken token) {
+int insert_last(UkTSezPar L, char *ret) {
 	UkTPlzkaSezPar PomUk;
-	if ((PomUk = malloc(sizeof(TPlzkaSezPar))) == NULL) {
+	if ((PomUk = malloc(sizeof(struct plzkaSezPar))) == NULL) {
 		printf("chyba mallocu\n");
 		return ERR_INTERNI;
 	}
-	PomUk->ukdalsi = NULL;
-	if((pomUk->parametr.klic = malloc(token->delka*sizeof(char)))==NULL) {
+	if((PomUk->parametr.data = malloc (sizeof(struct bsdata) ))==NULL){
 		return ERR_INTERNI;
 	}
-  strcpy(PomUk->parametr.klic, token->data);
-  PomUk->parametr.data.typ = TDNIL;
-  
+	PomUk->ukdalsi = NULL;
+	if((PomUk->parametr.klic = malloc((strlen(ret)+1)*sizeof(char)))==NULL) {
+		return ERR_INTERNI;
+	}
+	printf("%s\n", ret);
+  strcpy(PomUk->parametr.klic, ret);
+  PomUk->parametr.data->typ = TDNIL;
+
   if (L->prvni == NULL) { //seznam je prazdny
       L->prvni = PomUk;
-      L->aktivni = PomUk;
+      L->posledni = PomUk;
+      printf("mozna\n");
   }
   else {
-  	while (L->aktivni != NULL){ // pruchodu bude malo, protoze byvame uz na poslednim
-  		L->aktivni = L->aktivni->ukdalsi;
-  	}
-    L->aktivni->ukdalsi = PomUk;
+	L->posledni->ukdalsi = PomUk;
+	L->posledni = L->posledni->ukdalsi;
   }
+  
+  return ERR_OK;
 }
 
 // nastaveni aktivity na prvni prvek
@@ -169,31 +149,38 @@ void *hodnota_aktivniho(UkTSezPar L) {
 	return &(L->aktivni->parametr);
 }
 
-void zmen_data_par(UkTSezPar L, TToken token){
-	switch(token->typ){
-		case RETEZEC: if ((L->aktivni->parametr.data.dataRet = malloc(token->delka*sizeof(char)))==NULL){
+int zmen_data_par(UkTSezPar L, char *ret, int typ){
+	
+	switch(typ){
+		case RETEZEC: if ((L->posledni->parametr.data->data.dataRet = malloc(strlen(ret)*sizeof(char)))==NULL){
 										return ERR_INTERNI;
 									}
-									strcpy(	L->aktivni->parametr.data.dataRet, token->data );
-									L->aktivni->parametr.data.typ = TDRETEZEC;
+									strcpy(	L->posledni->parametr.data->data.dataRet, ret );
+									L->posledni->parametr.data->typ = TDRETEZEC;
 									break;
 		case INTKONEC:
     case DESKONEC:	
-    case EXPKONEC: 	L->aktivni->parametr.data.typ = TDCISLO;
-    								L->aktivni->parametr.data.dataCis = atof(token->data);
+    case EXPKONEC: 	L->posledni->parametr.data->typ = TDCISLO;
+    								L->posledni->parametr.data->data.dataCis = atof(ret);
     								break;
-    case TNTRUE: 	L->aktivni->parametr.data.typ = TDBOOL;
-    							L->aktivni->parametr.data.dataBool = TRUE;
+    case TNTRUE: 	L->posledni->parametr.data->typ = TDBOOL;
+    							L->posledni->parametr.data->data.dataBool = TRUE;
     							break;
-    case TNFALSE:	L->aktivni->parametr.data.typ = TDBOOL;
-    							L->aktivni->parametr.data.dataBool = FALSE;
+    case TNFALSE:	L->posledni->parametr.data->typ = TDBOOL;
+    							L->posledni->parametr.data->data.dataBool = FALSE;
     							break;
 	}
+	
+	return ERR_OK;
 }
 int najdi_prvek(UkTSezPar L, char *K){
+		if (L==NULL){
+			printf("nealokovan zasobnik\n");
+			return ERR_INTERNI;
+		}
 		set_first(L);
 		while(L->aktivni != NULL){
-			if(strcmp(L->aktivni->klic, K) == 0){
+			if(strcmp(L->aktivni->parametr.klic, K) == 0){
 					return TRUE;
 			}
 			

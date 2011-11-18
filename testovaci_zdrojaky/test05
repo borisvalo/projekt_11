@@ -1,0 +1,16 @@
+--[[ if chybi else ]]
+function main() --Hlavni telo programu
+	local a;
+	local vysl;
+
+	write("Zadejte cislo pro vypocet faktorialu\n");
+	a = read("*n");
+
+	if a < 0 then
+		write("Faktorial nelze spocitat\n");
+	end;
+
+		write("Vysledek je: ", vysl, "\n");
+	end;
+end;
+

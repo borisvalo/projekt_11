@@ -9,7 +9,6 @@
 #include "str.h"
 #include "parser.h"
 
-//---------------- BVS pro lokalni promenne ------------------------
 //Inicializace stromu
 void BVSInit (UkTBSUzel *Kor) {
     (*Kor) = NULL;
@@ -70,7 +69,7 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         }
     }
 }
-/*
+
 void BVSNahradZaPraveho(UkTBSUzel PtrReplaced, UkTBSUzel *Kor) {
 	UkTBSUzel pom;
     pom = NULL;
@@ -117,7 +116,7 @@ void BVSVymaz (UkTBSUzel *Kor, char *K) {
         }
     }
 } 
-*/
+
 void BVSZrus (UkTBSUzel *Kor) {	
     if ((*Kor) != NULL) {
         if ((*Kor)->luk != NULL) {
@@ -134,15 +133,15 @@ void BVSZrus (UkTBSUzel *Kor) {
         (*Kor) = NULL;
     }
 }
-//------------------ Konec funkci pro lok. promenne ------------------
 
 //------------------ Funkce pro BVS Funkci -------------------------
 void BVSFunkceInit (UkTBSFunkce *Kor) {
     (*Kor) = NULL;
 }	
 
-int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol obsah)	{
+int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol *obsah)	{
 	if (Kor == NULL) { //neni v cem hledat
+		printf("null\n");
         return FALSE;
     }
     else {
@@ -154,10 +153,14 @@ int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol obsah)	{
                 return BVSFunkceNajdi(Kor->puk, K, obsah);
             }
         }
-        else {
-            obsah = &(Kor->data); //vratime ukazatel na strukturu dat
+        else if(strcmp(Kor->klic, K) == 0){
+			printf("spravne\n");
+            *obsah = &(Kor->data); //vratime ukazatel na strukturu dat
             return TRUE;
-        }
+        }else{
+			printf("neocekavana chyba\n");
+			return FALSE;
+		}
     }	
 } 
 
@@ -167,13 +170,13 @@ void BVSFunkceVloz (UkTBSFunkce* Kor, char *K, UkTBSFunkPol obsah) {
         if ((ptr = (UkTBSFunkce) malloc(sizeof(TBSFunkce))) == NULL) {
             printf("chyba mallocu!\n");
         }
-        
-        Ret_alokuj(&(ptr->klic), 10); //alokujeme misto pro klic
+        Ret_alokuj(&(ptr->klic), strlen(K)+1); //alokujeme misto pro klic
         
         ptr->luk = NULL;
         ptr->puk = NULL;
         strcpy(ptr->klic, K); //vlozime klic
         
+        printf("%s\n", ptr->klic);
         ptr->data.pocet_param = 0;
         ptr->data.koren = NULL;
         ptr->data.zasobnik = NULL;
@@ -209,3 +212,6 @@ void BVSFunkceZrus (UkTBSFunkce *Kor) {
         (*Kor) = NULL;
     }
 }
+
+
+

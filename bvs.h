@@ -70,6 +70,6 @@ void Pole_uvolni(UkTBSUzel ret);
 int Pole_alokuj(UkTBSUzel *ret, int pocet);
 
 void BVSFunkceInit (UkTBSFunkce *Kor);
-int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol obsah);
+int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol *obsah);
 void BVSFunkceVloz (UkTBSFunkce *Kor, char *K, UkTBSFunkPol obsah);
 void BVSFunkceZrus (UkTBSFunkce *Kor);

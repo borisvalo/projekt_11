@@ -1,13 +1,19 @@
---[[ funkce main by mela byt posledni definovanou funkci ]]
+--[[ nespravna konkatenace ]]
 function main() --Hlavni telo programu
-	local a;
+	local a = "buchty s ";
 	local vysl;
+	local b = 3;
+
+	vysl = a .. b;
+	write("Vysledek je: ", vysl, "\n");
 	
-	write("Zadejte\n");
+
+	
+	write("Zadejte cislo pro vypocet faktorialu\n");
 	a = read("*n");
 
 	if a < 0 then
-		write("Faktori\n");
+		write("Faktorial nelze spocitat\n");
 	else
 		vysl = factorial(a);
 		write("Vysledek je: ", vysl, "\n");

@@ -3,11 +3,11 @@ function main() --Hlavni telo programu
 	local a;
 	local vysl;
 	
-	write("Zadejte\n");
+	write("Zadejte cislo pro vypocet faktorialu\n");
 	a = read("*n");
 
 	if a < 0 then
-		write("Faktori\n");
+		write("Faktorial nelze spocitat\n");
 	else
 		vysl = factorial(a);
 		write("Vysledek je: ", vysl, "\n");

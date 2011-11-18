@@ -1,13 +1,20 @@
---[[ funkce main by mela byt posledni definovanou funkci ]]
+--[[ spatne if ]]
 function main() --Hlavni telo programu
 	local a;
 	local vysl;
+
+	if 1 < 2 < "jablko" then
+		a = 5;
+	else
+		a = 3;
+	end;	
+
 	
-	write("Zadejte\n");
+	write("Zadejte cislo pro vypocet faktorialu\n");
 	a = read("*n");
 
 	if a < 0 then
-		write("Faktori\n");
+		write("Faktorial nelze spocitat\n");
 	else
 		vysl = factorial(a);
 		write("Vysledek je: ", vysl, "\n");

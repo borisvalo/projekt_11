@@ -1,0 +1,100 @@
+-- funkce vraci retezec
+function hello_kitty(lizatko)
+
+	local ahoj = "Kolo c. ";
+	local AHOJ = "\"AHOJ\" je neco jineho nez \"ahoj\". \n"
+	local cau = true;
+	local nazdar = "QWERTYUIOPLKJHGFDSAZXCVBNM;:{0987654321%&qwertyuioplkjhgfdsazxcvbnm><";
+	local serazene_nazdar;
+
+	local retezec1 = "nema ";
+	local retezec2 = "Nikdo ";
+	local retezec3 = "rad ";
+	local zkonkatenovany_retezec;
+
+	
+	serazene_nazdar = sort(nazdar);
+
+	write(serazene_nazdar, "\n");
+	write(AHOJ, "\n");
+
+	while lizatko >= 5 do
+		write(ahoj, lizatko, "\n");
+		lizatko = lizatko - 20;
+	end;
+
+	while lizatko >= 10 do
+		write("Tohle by se nemelo vypsat!", "\n");
+		lizatko = lizatko - 1;
+	end;
+
+	if cau == true then
+		cau = "Karkulka";
+	else
+		cau = "Popelka";
+	end;
+
+	zkonkatenovany_retezec = retezec2 .. retezec1 .. retezec3 .. "IFJ!";
+	write("Pradiva veta: ", zkonkatenovany_retezec, "\n");
+
+	return cau;
+
+end;
+
+
+--[[ DODELAT:   ]]
+
+
+function factorial(n)
+	local temp_result;
+	local decremented_n;
+	local result;
+
+	if n < 2 then
+		result = 1;
+	else
+		decremented_n = n - 1;
+		temp_result = factorial(decremented_n);
+		result = n * temp_result;
+	end;
+
+	return result;
+end
+
+
+function main()
+
+	local bonbon;
+	local necum = 4.65;
+	local idiot = "projekt do IFJ";
+	local blbecek = type(idiot);
+	local number;
+
+
+	if (0 == "0") == false then
+		write("Spravne vyhodnocovani.\n");
+	else
+		write("Spatne vyhodnocovani!!\n");
+	end;
+
+
+	if (3*2-9)^(2.6-1.87) == necum then
+			write("Jako fakt???\t", "Tomu neverim.", "\n");
+	else
+			write("Dneska v ", necum, " jsem byl ve skole a delal ", idiot, "\n");
+			write("Typ promenne idiot je ", blbecek, "\n");
+	end;
+
+	bonbon = 365;
+
+	nestvi = hello_kitty(bonbon);
+
+	write(nestvi, "\n");
+
+	number = read("*n");
+	vysledek = factorial(number);
+	write("Vysledek faktorialu s cislem ", number, " je ", vysledek, "\n");
+	
+	return 0;
+
+end;

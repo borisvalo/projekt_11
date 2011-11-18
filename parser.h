@@ -9,6 +9,8 @@
 #define ERR_INTERNI 5
 #define ERR_PRAZDNY_VYRAZ 6
 
+//UkTBSUzel pole_stromu;
+int delka_pole_stromu;
 
 void kontrola_identifikatoru();
 int ll_funkce ();
@@ -23,4 +25,5 @@ int ll_volani_prvni_parametr();
 int ll_volani_dalsi_parametr();
 int syntakticky_analyzator();
 int syntax_vyrazu();
+int ll_write();
 #endif

@@ -49,7 +49,7 @@ typedef enum {
     
     REZSL, //rezervovana slova
     RSAND, RSBREAK, RSELSEIF, RSFOR, RSIN, RSNOT, RSOR,
-    RSREPEAT, RSUNTIL,
+    RSREPEAT, RSUNTIL, RSSORT, RSFIND, RSTYPE, RSSUBSTR,
 } TOKENY;
 
 // struktura tokenu
