@@ -11,7 +11,7 @@
 
 // typy instrukci
 typedef enum nazvyInstrukci {
-    IN_READ,     // read        | /      | /   | cil  0
+    IN_READ,     // read        | op     | /   | cil  0
     IN_WRITE,    // write       | op     | /   | /    1
     //---------------------------------------------
     IN_ADD,      // +           | op     | op  | cil  2
@@ -29,10 +29,11 @@ typedef enum nazvyInstrukci {
     IN_KONK,     // ..          | op     | op  | cil 13
     //---------------------------------------------
     IN_GOTO,     // goto        | navesti| /   | /   14
+    IN_PGOTO,    // podminene   | op     |nvsti| / 
     IN_NVSTI,    // navesti     | navesti| /   | /   15
     //---------------------------------------------
-    IN_TYPE,     // type()      |                    16
-    IN_FIND,     // find()      | op     | op  | cil 17
+    IN_TYPE,     // type()      | op     | /   | cil 16
+    IN_FIND,     // find()      | ret    | hl  | cil 17  hl - hledany podretezec
     IN_SORT,     // heapsort()  | op     | /   | cil 18
     IN_SUBSTR,   // substr()    |                    19
     //---------------------------------------------
@@ -98,6 +99,7 @@ void Sez_prvni(UkTSezInstr L);
 void *Sez_hodnota_aktivniho(UkTSezInstr L);
 void Sez_dalsi(UkTSezInstr L);
 void Sez_nastav_aktivni(UkTSezInstr L, UkTPlzkaSez instrukce);
+void *Sez_vrat_uk_posledni(UkTSezInstr L);
 
 //funkce interpretu
 int Vloz_instrukci(UkTSezInstr seznam, int typ, void *op1, void *op2, void *op3);

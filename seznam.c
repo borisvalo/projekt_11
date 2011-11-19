@@ -76,6 +76,11 @@ void Sez_nastav_aktivni(UkTSezInstr L, UkTPlzkaSez instrukce) {
     L->aktivni = instrukce;
 }
 
+//vrati ukazatel na posledni prvek
+void *Sez_vrat_uk_posledni(UkTSezInstr L) {
+		return (void *) L->posledni;
+}
+
 /* SEZNAM pro parametry funkce */
 
 

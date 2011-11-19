@@ -46,12 +46,18 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         ptr->luk = NULL;
         ptr->puk = NULL;
         strcpy(ptr->klic, K); //vlozime klic
-        ptr->data.typ = obsah->typ;
+        if(obsah != NULL){
+        	ptr->data.typ = obsah->typ;
+        }else{
+        	ptr->data.typ = TDNIL;
+        }
         if (ptr->data.typ == TDRETEZEC) {
         				Ret_alokuj(&(ptr->data.data.dataRet), strlen(obsah->data.dataRet));
         }
         else {
-        				ptr->data.data = obsah->data;
+        				if(obsah != NULL){
+        					ptr->data.data = obsah->data;
+        				}
         }
         
         (*Kor) = ptr; //nakonec novy uzel vlozime primo do stromu

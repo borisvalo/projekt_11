@@ -1,7 +1,7 @@
 // scaner.h
 
 //pomocne definice:
-#define MIN_ARR     8
+#define MIN_ARR     10
 #define NAS_DEL     2
 #define KONEC_OK    0
 #define KONEC_CHYBA 1
@@ -41,7 +41,7 @@ typedef enum {
     NEROVNASE,     // ~=
     IDKONEC,       // identifikator
     MINUSKONEC,    // -
-    ENDOFFILE,     // EOF
+    ENDOFFILE,     // EOF //23
     
     //klicova slova
     TNDO, TNELSE, TNEND, TNFALSE, TNFUNCTION, TNIF, TNLOCAL,

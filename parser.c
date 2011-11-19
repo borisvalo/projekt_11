@@ -261,7 +261,7 @@ void kontrola_identifikatoru(){
 }
 
 int ll_funkce (){
-	printf("ll_funkce: vstup\n");
+	printf("ll_funkce: vstup\n\n\n\n");
 	chyba = dej_token();
 	if (chyba != ERR_OK){
 		return chyba;
@@ -331,13 +331,13 @@ int ll_funkce (){
 	// PRIKAZY
 		printf("ll_funkce: po deklaraci\n");
 	chyba=ll_prikazy();
+		printf("ll_funkce: po prikazech eer: %d,  %d\n",chyba, token->typ);
 	if (chyba != ERR_OK){
 		return chyba;
 	}
-		printf("ll_funkce: po prikazech\n");
-
+		
 	if (token->typ != TNEND){
-		printf("token->typ: %d", token->typ);
+		printf("(mel by byt end)  token->typ: %d\n", token->typ);
 		return ERR_SYNTAX;
 	}
 		printf("ll_funkce: prijato: end\n");
@@ -498,15 +498,19 @@ int ll_inicializace(){
 }
 
 int ll_prikazy(){
-	printf("ll_prikazy: vstup\n");
+	printf("ll_prikazy: vstup %d \n", token->typ);
+	int *pom_pole;
+	
 	switch(token->typ){
+		case TNEND: printf("nic se nestane\n");break;
 		case TNIF:	
 		// pravidlo 11	<PŘÍKAZY> -> if VÝRAZ then PŘÍKAZY else PŘÍKAZY end ; PŘÍKAZY
+		printf("prisel if\n");
 								chyba = syntax_vyrazu();		
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
-								
+								printf("(ma prijit then) %d", token->typ);
 								if (token->typ != TNTHEN){
 									return ERR_SYNTAX;
 								}
@@ -515,10 +519,12 @@ int ll_prikazy(){
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
+								printf("budou prikazy\n");
 								chyba = ll_prikazy();		
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
+								printf("po prikazech\n");
 								
 								if (token->typ != TNELSE){
 									return ERR_SYNTAX;
@@ -532,6 +538,8 @@ int ll_prikazy(){
 									return chyba;
 								}
 								
+								printf("ma byt end: %d\n", token->typ);
+								
 								if (token->typ != TNEND){
 									return ERR_SYNTAX;
 								}
@@ -540,6 +548,7 @@ int ll_prikazy(){
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
+								printf("ma byt strednik: %d\n", token->typ);
 								if (token->typ != STREDNIK){
 									return ERR_SYNTAX;
 								}
@@ -548,6 +557,7 @@ int ll_prikazy(){
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
+								printf("pred dalsimi prikazy za if-else-end;: %d\n", token->typ);
 								chyba = ll_prikazy();		
 								if (chyba!=ERR_OK){
 									return chyba;
@@ -555,7 +565,8 @@ int ll_prikazy(){
 								break;
 								
 		// pravidlo 12	<PŘÍKAZY> -> id PŘÍKAZ_S_ID ; PŘÍKAZY
-		case IDKONEC:	chyba = ll_prikaz_s_id();		
+		case IDKONEC:	printf("!!!!!!!!!!!!!!ma byt ID %d\n",token->typ);
+									chyba = ll_prikaz_s_id();		
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
@@ -645,6 +656,7 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
+									printf("write: ma byt strednik je: %d\n", token->typ);
 									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
@@ -653,6 +665,7 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
+									printf("write: pred dalsimi prikazy %d\n", token->typ);
 									chyba = ll_prikazy();		
 									if (chyba!=ERR_OK){
 										return chyba;
@@ -673,7 +686,23 @@ int ll_prikazy(){
 									if (token->typ != RETEZEC){
 										return ERR_SYNTAX;
 									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op2);
+
+									if ( (op2 = malloc( sizeof(TBSPolozka) )) == NULL){
+										return ERR_INTERNI;
+									}
+
+                  if(( ( (UkTBSPolozka) op2)->data.dataRet = (char *) malloc(token->delka * sizeof(char)))==NULL){
+										return ERR_INTERNI;
+                  }
+                  strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
+									Vloz_instrukci(seznam_instrukci, IN_READ, (UkTBSPolozka) op2, NULL, (UkTBSPolozka) op3);
 									
+									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
+									// Vloz_instrukci(IN_PRIRAD, op3, NULL, vyhledana_promenna);
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
 										return chyba;
@@ -715,7 +744,12 @@ int ll_prikazy(){
 									if (token->typ != RETEZEC && token->typ != EXPKONEC && token->typ != DESKONEC && token->typ != INTKONEC && token->typ != IDKONEC){
 										return ERR_SYNTAX;
 									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+									Vloz_instrukci(seznam_instrukci, IN_TYPE, token->data, NULL, op3);
 									
+									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
+									// Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, vyhledana_promenna);
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
 										return chyba;
@@ -754,6 +788,8 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op1);
 									if (token->typ != CARKA){
 										return ERR_SYNTAX;
 									}
@@ -762,7 +798,8 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op2);
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}
@@ -774,7 +811,12 @@ int ll_prikazy(){
 									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+                  Vloz_instrukci(seznam_instrukci, IN_FIND, op1, op2, op3);
 									
+									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
+									// Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, vyhledana_promenna);
 									//další příkazy
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
@@ -797,7 +839,13 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+                  Vloz_instrukci(seznam_instrukci, IN_SORT, token->data, NULL, op3);
 									
+									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
+									// Vloz_instrukci(IN_PRIRAD, op3, NULL, vyhledana_promenna);
+									//další příkazy
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}
@@ -827,17 +875,54 @@ int ll_prikazy(){
 										if(token->typ != ZAVLEVA){
 											return ERR_SYNTAX;
 										}
+										if ((pom_pole = malloc(2 * sizeof(int))) == NULL){
+	  									return ERR_INTERNI;
+										}
 										//prvni parametr
-										chyba = syntax_vyrazu();
+										chyba = dej_token();
 										if (chyba!=ERR_OK){
 											return chyba;
 										}
-										
+										BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  	BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op1);
+										if (token->typ != RETEZEC){
+											Ret_alokuj(&((UkTBSPolozka) op1)->data.dataRet, token->delka);
+                  		strcpy(((UkTBSPolozka) op1)->data.dataRet, token->data);
+										}else{
+											op1 = NULL;
+										}
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
 										if(token->typ != CARKA){
 											return ERR_SYNTAX;
 										}
 										//druhy parametr
-										chyba = syntax_vyrazu();
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if (token->typ == MINUSKONEC){
+											chyba = dej_token();
+											if (chyba!=ERR_OK){
+												return chyba;
+											}
+											if(token->typ == INTKONEC){
+												pom_pole[0] = 0 - atof(token->data);
+											}else{
+												free(pom_pole);
+												pom_pole = NULL;
+											}
+										}else{
+											if(token->typ == INTKONEC){
+												pom_pole[0] = atof(token->data);
+											}else{
+												free(pom_pole);
+												pom_pole = NULL;
+											}
+										}
+										chyba = dej_token();
 										if (chyba!=ERR_OK){
 											return chyba;
 										}
@@ -846,11 +931,43 @@ int ll_prikazy(){
 											return ERR_SYNTAX;
 										}
 										//treti parametr
-										chyba = syntax_vyrazu();
+										chyba = dej_token();
 										if (chyba!=ERR_OK){
 											return chyba;
 										}
-										
+										if (token->typ == MINUSKONEC){
+											chyba = dej_token();
+											if (chyba!=ERR_OK){
+												return chyba;
+											}
+											if(pom_pole != NULL){
+												if(token->typ == INTKONEC){
+													pom_pole[0] = 0 - atof(token->data);
+												}else{
+													free(pom_pole);
+													pom_pole = NULL;
+												}
+											}
+										}else{
+											if(pom_pole != NULL){
+												if(token->typ == INTKONEC){
+													pom_pole[0] = atof(token->data);
+												}else{
+													free(pom_pole);
+													pom_pole = NULL;
+												}
+											}
+										}
+										BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  	BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+                  	Vloz_instrukci(seznam_instrukci, IN_SUBSTR, op1, pom_pole, op3);
+									
+										//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
+										// Vloz_instrukci(IN_PRIRAD, op3, NULL, vyhledana_promenna);
+										chyba=dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
 										if (token->typ != ZAVPRAVA){
 											return ERR_SYNTAX;
 										}
@@ -901,7 +1018,7 @@ int ll_write(){
 }
 
 int ll_prikaz_s_id(){
-	printf("ll_prikazy_s_id: vstup\n");
+	printf("!!!!!!!!!!!!!!!!ll_prikazy_s_id: vstup\n");
 	// pravidlo 16	<PŘÍKAZ_S_ID> -> ( volani_prvni_parametr )
 	// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
 	chyba = dej_token();		
@@ -1206,6 +1323,7 @@ int ll_prikaz_s_id_a_rovnase(){
 			return chyba;
 		}
 	}
+	printf("ll_prikaz_s_id_a_rovnase: vystup %d, %d", chyba, token->typ);
 	return chyba;
 }
 

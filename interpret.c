@@ -106,6 +106,15 @@ int Interpret(UkTSezInstr list) {
                 Sez_nastav_aktivni(list, ukinstr->op1);
                 break;
                 
+            //podmineny skok
+            case IN_PGOTO:
+            		if (((UkTBSPolozka)ukinstr->op1)->typ == TDBOOL) {
+            				if (((UkTBSPolozka)ukinstr->op1)->data.dataBool == TRUE) {
+            						Sez_nastav_aktivni(list, ukinstr->op2);
+            				}
+            		}
+            		break;
+                
             //mensi <
             case IN_MENSI:
                 if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
@@ -269,6 +278,8 @@ int Interpret(UkTSezInstr list) {
                 
             case IN_SUBSTR:
                 //zavolani funkce substr()
+                // osetrit oprandy na NULL, pokud bude jakykoliv z nich NULL, vraci se rovnou NULL
+                // free(pom_pole);
                 break;
                 
             //operace prirazeni

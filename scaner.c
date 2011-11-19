@@ -17,7 +17,6 @@ int token_alokuj(UkTToken *strukt) {
         printf("chyba mallocu!!");
         return ERR_INTERNI;
     }
-    //Ret_alokuj(&((*strukt)->data), MIN_ARR);
     (*strukt)->data = NULL;
     (*strukt)->delka = MIN_ARR;
     return ERR_OK;
@@ -294,7 +293,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
             case Literal:
                 if (symbol == '\\') {
                     stav = Escape;
-                    if ((citac + 1) > strukt->delka) { //realokace
+                    if ((citac + 2) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }
@@ -302,7 +301,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                     citac++; //bude se cist dalsi znak
                 }
                 else if (symbol == '"') {
-                    if ((citac + 2) > strukt->delka) { //realokace
+                    if ((citac + 3) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }
@@ -312,7 +311,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                     return KONEC_OK;
                 }
                 else {
-                    if ((citac + 1) > strukt->delka) { //realokace
+                    if ((citac + 2) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }
@@ -478,7 +477,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                     isdigit(symbol) != 0 ||
                     symbol == '_') {
                     stav = Id; //stejny stav
-                    if ((citac + 1) > strukt->delka) { //realokace
+                    if ((citac + 2) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }
@@ -487,7 +486,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 }
                 else { //konec retezce
                     ungetc(symbol, f);
-                    if ((citac + 1) > strukt->delka) { //realokace
+                    if ((citac + 2) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }

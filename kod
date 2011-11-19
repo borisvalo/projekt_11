@@ -1,32 +1,16 @@
 --[[ funkce main by mela byt posledni definovanou funkci ]]
 function main() --Hlavni telo programu
 	local a;
-	local vysl;
+	local vyslakshdoiuwdh;
 	
-	write("Zadejte\n");
-	a = read("*n");
+	write("Zade");
+	read("*n");
 
 	if a < 0 then
-		write("Faktori\n");
+		write("Faw");
 	else
-		vysl = factorial(a);
-		write("Vysledek je: ", vysl, "\n");
+		factorial(a);
+		write("Vy:", vyslakshdoiuwdh, "aaa");
 	end;
 end;
-
-function factorial(n)
-	local temp_result;
-	local decremented_n;
-	local result;
-
-	if n < 2 then
-		result = 1;
-	else
-		decremented_n = n - 1;
-		temp_result = factorial(decremented_n);
-		result = n * temp_result;
-	end;
-
-	return result;
-end
 
