@@ -19,7 +19,7 @@ int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah)	{
         return FALSE;
     }
     else {
-        if (strcmp(Kor->klic, K) != 0) {
+        if (strcmp(Kor->klic,K) != 0) {
             if (strcmp(Kor->klic, K) > 0) { //doleva
                 return BVSNajdi(Kor->luk, K, obsah);
             }
@@ -56,7 +56,8 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         }
         else {
         				if(obsah != NULL){
-        					ptr->data.data = obsah->data;
+        					ptr->data.data = obsah->data
+        					;
         				}
         }
         

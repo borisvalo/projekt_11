@@ -77,6 +77,12 @@ int main(){
 	
 	chyba = syntakticky_analyzator();
 	
+	Sez_zrus(seznam_instrukci);
+	
+	Sez_zrus_funkce(pom_uzel_funkce->zasobnik);
+	
+	BVSZrus (&pom_uzel_funkce->koren);
+	
 	token_uvolni(token);
 	zasobnik_free(&zasobnik);
 	fclose(soubor);

@@ -231,7 +231,7 @@ void kontrola_identifikatoru(){
 		token->typ = TNWRITE;
 	}else	if (strcmp(token->data, "and") == 0) {
 		token->typ = RSAND;
-	}else	if (strcmp(token->data, "break;") == 0) {
+	}else	if (strcmp(token->data, "break") == 0) {
 		token->typ = RSBREAK;
 	}else	if (strcmp(token->data, "elseif") == 0) {
 		token->typ = RSELSEIF;
@@ -281,13 +281,15 @@ int ll_funkce (){
 	if (token->typ != IDKONEC) {
 		return ERR_SYNTAX;
 	}
-	
+	printf("prisel id - nazev fce\n");
 	// vlozeni id funkce do TBS funkci
 	
 	BVSFunkceVloz(&strom_funkci, token->data, NULL);
 	if (BVSFunkceNajdi(strom_funkci, token->data, &pom_uzel_funkce)){
-		printf ("funkce nenalezena\n");
+		printf("redeklarace: ERR_SEMANT\n");
 	}
+	
+	
 	if ((pom_uzel_funkce->zasobnik = malloc(sizeof(struct sezPar)))== NULL){
 		return ERR_INTERNI;
 	}
@@ -297,6 +299,7 @@ int ll_funkce (){
 		return ERR_INTERNI;
 	}
 	BVSInit(&pom_uzel_funkce->koren);
+	BVSInit(&pom_tab_sym);
 	//printf("%d\n", *pom_uzel_funkce);
 	// (
 	chyba = dej_token();
