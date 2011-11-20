@@ -390,7 +390,7 @@ int ll_dalsi_parametr(){
 		if (chyba!=ERR_OK){
 			return chyba;
 		}
-		if (token->typ == IDKONEC){		
+		if (token->typ == IDKONEC){
 			if (!najdi_prvek(pom_uzel_funkce->zasobnik, token->data)){ // pokud již je v tabulce -> redeklarace -> err
 				return ERR_SEMANT;
 			}else{
@@ -502,15 +502,16 @@ int ll_prikazy(){
 	int *pom_pole;
 	
 	switch(token->typ){
-		case TNEND: printf("nic se nestane\n");break;
+		//case TNEND: printf("ll_prikazy: end: nic se nestane\n");break;
+		//case TNELSE: printf("ll_prikazy: else: nic se nestane\n");return ERR_OK;break;
 		case TNIF:	
 		// pravidlo 11	<PŘÍKAZY> -> if VÝRAZ then PŘÍKAZY else PŘÍKAZY end ; PŘÍKAZY
-		printf("prisel if\n");
+		printf("\n\nprisel if\n");
 								chyba = syntax_vyrazu();		
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
-								printf("(ma prijit then) %d", token->typ);
+								printf("(ma prijit then) %d\n", token->typ);
 								if (token->typ != TNTHEN){
 									return ERR_SYNTAX;
 								}
@@ -519,13 +520,13 @@ int ll_prikazy(){
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
-								printf("budou prikazy\n");
+								printf("hura, budou prikazy\n");
 								chyba = ll_prikazy();		
 								if (chyba!=ERR_OK){
+									printf("!!if: Prisel err z ll_prikazy... \n");
 									return chyba;
 								}
-								printf("po prikazech\n");
-								
+								printf("prikazy: if: po prikazech pred else %d\n", token->typ);
 								if (token->typ != TNELSE){
 									return ERR_SYNTAX;
 								}
@@ -565,23 +566,9 @@ int ll_prikazy(){
 								break;
 								
 		// pravidlo 12	<PŘÍKAZY> -> id PŘÍKAZ_S_ID ; PŘÍKAZY
-		case IDKONEC:	printf("!!!!!!!!!!!!!!ma byt ID %d\n",token->typ);
-									chyba = ll_prikaz_s_id();		
-									if (chyba!=ERR_OK){
-										return chyba;
-									}
-									chyba = dej_token();		
-									if (chyba!=ERR_OK){
-										return chyba;
-									}
-									if (token->typ != STREDNIK){
-										return ERR_SYNTAX;
-									}	
-									chyba = dej_token();
-									if (chyba != ERR_OK){
-										return chyba;
-									}
-									chyba = ll_prikazy();		
+		case IDKONEC:	printf("ma byt ID %d\n",token->typ);
+									chyba = ll_prikaz_s_id();	
+									printf("prikaz_s_id: navrat %d\n", token->typ);	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
@@ -991,6 +978,7 @@ int ll_prikazy(){
 										}
 										break;
 	}//switch 
+	printf("vracim prazdne prikazy %d \n", chyba);
 	return ERR_OK;
 }//fce
 
@@ -1011,6 +999,7 @@ int ll_write(){
 						return chyba;
 					}
 			}else if(token->typ != ZAVPRAVA){
+				printf("neprislo uvnitr write\n");
 					return ERR_SYNTAX;
 			}
 			
@@ -1018,16 +1007,22 @@ int ll_write(){
 }
 
 int ll_prikaz_s_id(){
-	printf("!!!!!!!!!!!!!!!!ll_prikazy_s_id: vstup\n");
+	char * kam_priradit;
+	if ((kam_priradit=malloc(token->delka * sizeof(char)))==NULL){
+		return ERR_INTERNI;
+	}
+	printf("ll_prikazy_s_id: vstup s %d\n", token->typ);
 	// pravidlo 16	<PŘÍKAZ_S_ID> -> ( volani_prvni_parametr )
 	// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
 	chyba = dej_token();		
 	if (chyba!=ERR_OK){
+		free(kam_priradit);
 		return chyba;
 	}
 	switch (token->typ){
 		// pravidlo 16	<PŘÍKAZ_S_ID> -> ( PARAMETR )
-		case ZAVLEVA: chyba=ll_volani_prvni_parametr();		
+		case ZAVLEVA: chyba=ll_volani_prvni_parametr();	//TODO: volani funkce
+									free(kam_priradit);	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
@@ -1037,294 +1032,427 @@ int ll_prikaz_s_id(){
 									}
 									break;
 		// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
-		case ROVNASEKONEC:	chyba = ll_prikaz_s_id_a_rovnase();		
+		case ROVNASEKONEC:	printf("ll_prikaz_s_id: prislo = %d\n", token->typ);
+												chyba = ll_prikaz_s_id_a_rovnase();		
+												if(!BVSNajdi (pom_tab_sym, kam_priradit, op1)){
+													//return ERR_SEMANT; // TODO: zkontrolovat logiku hledani
+													printf("semanticka chyba\n");
+												}
+												Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, op1);
+												free(kam_priradit);
 												if (chyba!=ERR_OK){
 													return chyba;
 												}
 												break;
-		default: return ERR_SYNTAX;
+		default: printf("shazuju s err_syntax v prikaz_s_id");
+							free(kam_priradit);
+							return ERR_SYNTAX;
 	}
 	return ERR_OK;
 }
-int ll_prikaz_s_id_a_rovnase(){	
+
+int ll_prikaz_s_id_a_rovnase(){
+	int *pom_pole;
 	printf("ll_prikazy_s_id_a_rovnase: vstup\n");
-	// pravidlo 18	<PŘÍKAZ_S_ID_A_ROVNASE> -> id ( volani_prvni_parametr )
-	// pravidlo 19	<PŘÍKAZ_S_ID_A_ROVNASE> -> VYRAZ
-	chyba = dej_token();		
+	// pravidlo 18 <PŘÍKAZ_S_ID_A_ROVNASE> -> id ( volani_prvni_parametr )
+	// pravidlo 19 <PŘÍKAZ_S_ID_A_ROVNASE> -> VYRAZ
+
+	chyba = dej_token();
 	if (chyba!=ERR_OK){
 		return chyba;
 	}
-	if (token->typ == IDKONEC){
-		//volani fce
-		chyba = dej_token();		
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-		if (token->typ != ZAVLEVA){
-			return ERR_SYNTAX;
-		}
-		
-		chyba=ll_volani_prvni_parametr();
-		
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-		
-		if (token->typ != ZAVPRAVA){
-			return ERR_SYNTAX;
-		}
-	}else if (token->typ == TNWRITE){
-		chyba = dej_token();						
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-		if(token->typ != ZAVLEVA){
-			return ERR_SYNTAX;
-		}
-		chyba = ll_write();
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-		chyba = dej_token();		
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-		if (token->typ != STREDNIK){
-			return ERR_SYNTAX;
-		}
-		//další příkazy
-		chyba = dej_token();		
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-		chyba = ll_prikazy();		
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-	}else if (token->typ == TNREAD){
-			printf("prisla fce read: token: %d",token->typ);
-			chyba = dej_token();						
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if(token->typ != ZAVLEVA){
-				return ERR_SYNTAX;
-			}
-		
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != RETEZEC){
-				return ERR_SYNTAX;
-			}
-		
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != ZAVPRAVA){
-				return ERR_SYNTAX;
-			}
-		
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != STREDNIK){
-				return ERR_SYNTAX;
-			}
-		
-			//další příkazy
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			chyba = ll_prikazy();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-		}else if (token->typ == RSTYPE){
-			chyba = dej_token();						
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if(token->typ != ZAVLEVA){
-				return ERR_SYNTAX;
-			}
-			
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != RETEZEC && token->typ != EXPKONEC && token->typ != DESKONEC && token->typ != INTKONEC && token->typ != IDKONEC){
-				return ERR_SYNTAX;
-			}
-			
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != ZAVPRAVA){
-				return ERR_SYNTAX;
-			}
-			
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != STREDNIK){
-				return ERR_SYNTAX;
-			}
-			
-			//další příkazy
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			chyba = ll_prikazy();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-		}else if (token->typ == RSFIND){
-			chyba = dej_token();						
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if(token->typ != ZAVLEVA){
-				return ERR_SYNTAX;
-			}
-			//prvni parametr
-			chyba = syntax_vyrazu();
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != CARKA){
-				return ERR_SYNTAX;
-			}
-			//druhy parametr
-			chyba = syntax_vyrazu();
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			
-			if (token->typ != ZAVPRAVA){
-				return ERR_SYNTAX;
-			}
-			
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != STREDNIK){
-				return ERR_SYNTAX;
-			}
-			
-			//další příkazy
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			chyba = ll_prikazy();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-		}else if(token->typ == RSSORT){
-			chyba = dej_token();						
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if(token->typ != ZAVLEVA){
-				return ERR_SYNTAX;
-			}
-			//prvni parametr
-			chyba = syntax_vyrazu(); // TODO: mozna jen retezec...
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			
-			if (token->typ != ZAVPRAVA){
-				return ERR_SYNTAX;
-			}
-			
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != STREDNIK){
-				return ERR_SYNTAX;
-			}
-			
-			//další příkazy
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			chyba = ll_prikazy();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-		}else if (token->typ == RSSUBSTR) {
-			chyba = dej_token();						
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if(token->typ != ZAVLEVA){
-				return ERR_SYNTAX;
-			}
-			//prvni parametr
-			chyba = syntax_vyrazu();
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			
-			if(token->typ != CARKA){
-				return ERR_SYNTAX;
-			}
-			//druhy parametr
-			chyba = syntax_vyrazu();
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			
-			if(token->typ != CARKA){
-				return ERR_SYNTAX;
-			}
-			//treti parametr
-			chyba = syntax_vyrazu();
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			
-			if (token->typ != ZAVPRAVA){
-				return ERR_SYNTAX;
-			}
-		
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			if (token->typ != STREDNIK){
-				return ERR_SYNTAX;
-			}
-		
-			//další příkazy
-			chyba = dej_token();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-			chyba = ll_prikazy();		
-			if (chyba!=ERR_OK){
-				return chyba;
-			}
-	}else {
-		chyba = syntax_vyrazu();		
-		if (chyba!=ERR_OK){
-			return chyba;
-		}
-	}
-	printf("ll_prikaz_s_id_a_rovnase: vystup %d, %d", chyba, token->typ);
-	return chyba;
+	printf("ll_prikazy_s_id_a_rovnase: token: %d\n", token->typ);
+	
+	switch (token->typ){
+		//volani uzivatelske fce
+		case IDKONEC:	chyba = dej_token();
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != ZAVLEVA){
+										return ERR_SYNTAX;
+									}
+									
+									chyba = ll_volani_prvni_parametr();
+									if (chyba != ERR_OK){
+										return chyba;
+									}
+									
+									if (token->typ != ZAVPRAVA) {
+										return ERR_SYNTAX;
+									}
+									printf("prisla prava ukoncujici zavorka\n");
+									chyba = dej_token();
+									if (chyba != ERR_OK){
+										return chyba;
+									}
+									
+									if (token->typ != STREDNIK){
+										return ERR_SYNTAX;
+									}	
+									chyba = dej_token();
+									if (chyba != ERR_OK){
+										return chyba;
+									}
+									chyba = ll_prikazy();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									break;
+		case TNWRITE: chyba = dej_token();						
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if(token->typ != ZAVLEVA){
+										return ERR_SYNTAX;
+									}
+									chyba = ll_write();
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									printf("write: ma byt strednik je: %d\n", token->typ);
+									if (token->typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									//další příkazy
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+                  if ( (op3 = (UkTBSPolozka) malloc( sizeof(TBSPolozka) )) == NULL){
+										return ERR_INTERNI;
+									}
+									((UkTBSPolozka)op3)->typ = TDNIL;
+									
+									printf("write: pred dalsimi prikazy po write %d\n", token->typ);
+									chyba = ll_prikazy();	
+									printf("write: po dalsich prikazech chyba: %d\n", chyba)	;
+									if (chyba!=ERR_OK){
+										return chyba;
+									}else
+										return ERR_OK;
+									break;
+		case TNREAD:  chyba = dej_token();						
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if(token->typ != ZAVLEVA){
+										return ERR_SYNTAX;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != RETEZEC){
+										return ERR_SYNTAX;
+									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op2);
+
+									if ( (op2 = malloc( sizeof(TBSPolozka) )) == NULL){
+										return ERR_INTERNI;
+									}
+
+                  if(( ( (UkTBSPolozka) op2)->data.dataRet = (char *) malloc(token->delka * sizeof(char)))==NULL){
+										return ERR_INTERNI;
+                  }
+                  strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
+									Vloz_instrukci(seznam_instrukci, IN_READ, (UkTBSPolozka) op2, NULL, (UkTBSPolozka) op3);
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != ZAVPRAVA){
+										return ERR_SYNTAX;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									
+									//další příkazy
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									chyba = ll_prikazy();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									break;
+		case RSTYPE:  chyba = dej_token();						
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if(token->typ != ZAVLEVA){
+										return ERR_SYNTAX;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != RETEZEC && token->typ != EXPKONEC && token->typ != DESKONEC && token->typ != INTKONEC && token->typ != IDKONEC){
+										return ERR_SYNTAX;
+									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+									Vloz_instrukci(seznam_instrukci, IN_TYPE, token->data, NULL, op3);
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != ZAVPRAVA){
+										return ERR_SYNTAX;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									
+									//další příkazy
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									chyba = ll_prikazy();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									break;
+		case RSFIND:  chyba = dej_token();						
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if(token->typ != ZAVLEVA){
+										return ERR_SYNTAX;
+									}
+									//prvni parametr
+									chyba = syntax_vyrazu();
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op1);
+									if (token->typ != CARKA){
+										return ERR_SYNTAX;
+									}
+									//druhy parametr
+									chyba = syntax_vyrazu();
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op2);
+									if (token->typ != ZAVPRAVA){
+										return ERR_SYNTAX;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+                  Vloz_instrukci(seznam_instrukci, IN_FIND, op1, op2, op3);
+									
+									//další příkazy
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									chyba = ll_prikazy();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									break;		
+		case RSSORT:  chyba = dej_token();						
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if(token->typ != ZAVLEVA){
+										return ERR_SYNTAX;
+									}
+									//prvni parametr
+									chyba = syntax_vyrazu(); // TODO: mozna jen retezec...
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+                  Vloz_instrukci(seznam_instrukci, IN_SORT, token->data, NULL, op3);
+									
+									//další příkazy
+									if (token->typ != ZAVPRAVA){
+										return ERR_SYNTAX;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									
+									//další příkazy
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									chyba = ll_prikazy();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									break;
+		case RSSUBSTR:  chyba = dej_token();						
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if(token->typ != ZAVLEVA){
+											return ERR_SYNTAX;
+										}
+										if ((pom_pole = malloc(2 * sizeof(int))) == NULL){
+	  									return ERR_INTERNI;
+										}
+										//prvni parametr
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  	BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op1);
+										if (token->typ != RETEZEC){
+											Ret_alokuj(&((UkTBSPolozka) op1)->data.dataRet, token->delka);
+                  		strcpy(((UkTBSPolozka) op1)->data.dataRet, token->data);
+										}else{
+											op1 = NULL;
+										}
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if(token->typ != CARKA){
+											return ERR_SYNTAX;
+										}
+										//druhy parametr
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if (token->typ == MINUSKONEC){
+											chyba = dej_token();
+											if (chyba!=ERR_OK){
+												return chyba;
+											}
+											if(token->typ == INTKONEC){
+												pom_pole[0] = 0 - atof(token->data);
+											}else{
+												free(pom_pole);
+												pom_pole = NULL;
+											}
+										}else{
+											if(token->typ == INTKONEC){
+												pom_pole[0] = atof(token->data);
+											}else{
+												free(pom_pole);
+												pom_pole = NULL;
+											}
+										}
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										
+										if(token->typ != CARKA){
+											return ERR_SYNTAX;
+										}
+										//treti parametr
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if (token->typ == MINUSKONEC){
+											chyba = dej_token();
+											if (chyba!=ERR_OK){
+												return chyba;
+											}
+											if(pom_pole != NULL){
+												if(token->typ == INTKONEC){
+													pom_pole[1] = 0 - atof(token->data);
+												}else{
+													free(pom_pole);
+													pom_pole = NULL;
+												}
+											}
+										}else{
+											if(pom_pole != NULL){
+												if(token->typ == INTKONEC){
+													pom_pole[1] = atof(token->data);
+												}else{
+													free(pom_pole);
+													pom_pole = NULL;
+												}
+											}
+										}
+										BVSVloz(&pom_tab_sym, generuj_klic(0), NULL);
+                  	BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
+                  	Vloz_instrukci(seznam_instrukci, IN_SUBSTR, op1, pom_pole, op3);
+									
+										//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
+										// Vloz_instrukci(IN_PRIRAD, op3, NULL, vyhledana_promenna);
+										chyba=dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if (token->typ != ZAVPRAVA){
+											return ERR_SYNTAX;
+										}
+									
+										chyba = dej_token();		
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if (token->typ != STREDNIK){
+											return ERR_SYNTAX;
+										}
+									
+										//další příkazy
+										chyba = dej_token();		
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										chyba = ll_prikazy();		
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										break;
+	}//switch 
+	return ERR_OK;
 }
 
 int ll_volani_prvni_parametr(){
@@ -1332,11 +1460,14 @@ int ll_volani_prvni_parametr(){
 // pravidlo 20 <volani_prvni_parametr> -> VYRAZ , VOLANI_dalsi_PARAMETR
 	chyba = syntax_vyrazu();
 	if (chyba == ERR_PRAZDNY_VYRAZ){
+		printf("prvni parametr == nic\n");
 		return ERR_OK;
 	}else if(token->typ == CARKA){
+		printf("prvni_parametr prijat, volam dalsi\n");
 		chyba = ll_volani_dalsi_parametr();
 		return chyba;
 	}else{
+		printf("prisel jeden parametr... zav prava: %d\n", token->typ);
 		return ERR_OK;
 	}
 }

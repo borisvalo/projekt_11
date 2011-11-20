@@ -3,14 +3,17 @@ function main() --Hlavni telo programu
 	local a;
 	local vyslakshdoiuwdh;
 	
-	write("Zade");
+	a=main("Zade");
 	read("*n");
 
 	if a < 0 then
-		write("Faw");
+		a=write("Faw");
 	else
-		factorial(a);
+		a=factorial(a);
 		write("Vy:", vyslakshdoiuwdh, "aaa");
 	end;
 end;
 
+function funkce()
+	write("a");
+end;
