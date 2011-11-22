@@ -54,11 +54,7 @@ int main(){
 		return ERR_INTERNI;
   }
 	printf("main: druha kontrola\n");
-	chyba=token_alokuj(&token);
-	if (chyba!=ERR_OK){
-		//TODO: zavrit soubor
-		return chyba;
-	}
+	token = NULL;
 	chyba = zasobnik_init( &zasobnik);
 	if (chyba!=ERR_OK){
 	//TODO: zavrit soubor

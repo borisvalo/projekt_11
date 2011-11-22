@@ -192,6 +192,14 @@ static int preced_tabulka[16][16] = {
 
 
 int dej_token(){
+	if (token!= NULL){
+		token_uvolni(token);
+	}
+	chyba=token_alokuj(&token);
+	if (chyba!=ERR_OK){
+		return chyba;
+	}
+	
 	chyba = ziskej_dalsi_token(soubor,token);
 	if (token->typ == IDKONEC){
 		kontrola_identifikatoru();
