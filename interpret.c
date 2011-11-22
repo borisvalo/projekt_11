@@ -108,10 +108,8 @@ int Interpret(UkTSezInstr list) {
                 
             //podmineny skok
             case IN_PGOTO:
-            		if (((UkTBSPolozka)ukinstr->op1)->typ == TDBOOL) {
-            				if (((UkTBSPolozka)ukinstr->op1)->data.dataBool == TRUE) {
-            						Sez_nastav_aktivni(list, ukinstr->op2);
-            				}
+            		if (!((((UkTBSPolozka)ukinstr->op1)->typ == TDBOOL && ((UkTBSPolozka)ukinstr->op1)->data.dataBool == FALSE) || ((UkTBSPolozka)ukinstr->op1)->typ == TDNIL)) { //cokoliv jineho nez FALSE a NIL znamena skok
+            				  Sez_nastav_aktivni(list, ukinstr->op2);
             		}
             		break;
                 

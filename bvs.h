@@ -12,7 +12,7 @@ typedef struct bsfunkpol {
 int pocet_param; // promenna pro ulozeni poctu parametru funkce
 struct bsuzel *koren; // koren tabulky symbolu dane fce
 struct sezPar *zasobnik;
-
+struct plzkaSez *adresa; // inception
 } TBSFunkPol, *UkTBSFunkPol;
 
 typedef struct bsfunkce {

@@ -292,6 +292,9 @@ int ll_funkce (){
 	printf("prisel id - nazev fce\n");
 	// vlozeni id funkce do TBS funkci
 	
+	Vloz_instrukci(seznam_instrukci, IN_NVSTI, NULL, NULL, NULL ); // navesti pro dalsi cyklus
+	pom_uzel_funkce->adresa = Sez_vrat_uk_posledni(seznam_instrukci);	
+	
 	BVSFunkceVloz(&strom_funkci, token->data, NULL);
 	if (BVSFunkceNajdi(strom_funkci, token->data, &pom_uzel_funkce)){
 		printf("redeklarace: ERR_SEMANT\n");
@@ -511,6 +514,8 @@ int ll_inicializace(){
 int ll_prikazy(){
 	printf("ll_prikazy: vstup %d \n", token->typ);
 	int *pom_pole;
+	UkTPlzkaSez adresa1;
+	UkTPlzkaSez adresa2;
 	
 	switch(token->typ){
 		//case TNEND: printf("ll_prikazy: end: nic se nestane\n");break;
@@ -522,6 +527,11 @@ int ll_prikazy(){
 								if (chyba!=ERR_OK){
 									return chyba;
 								}
+								
+								Vloz_instrukci(seznam_instrukci, IN_PGOTO, (UkTBSPolozka) op3, NULL, NULL );
+								adresa1 = Sez_vrat_uk_posledni(seznam_instrukci);
+								
+								
 								printf("(ma prijit then) %d\n", token->typ);
 								if (token->typ != TNTHEN){
 									return ERR_SYNTAX;
@@ -538,6 +548,13 @@ int ll_prikazy(){
 									return chyba;
 								}
 								printf("prikazy: if: po prikazech pred else %d\n", token->typ);
+														
+								Vloz_instrukci(seznam_instrukci, IN_GOTO, NULL, NULL, NULL ); // skok za podminku
+								adresa2 = Sez_vrat_uk_posledni(seznam_instrukci);
+								
+								Vloz_instrukci(seznam_instrukci, IN_NVSTI, NULL, NULL, NULL ); // generuje se navesti pro else
+								adresa1->instrukce.op2 = Sez_vrat_uk_posledni(seznam_instrukci); // na ktere se bude (mozna) skakat
+								
 								if (token->typ != TNELSE){
 									return ERR_SYNTAX;
 								}
@@ -555,6 +572,9 @@ int ll_prikazy(){
 								if (token->typ != TNEND){
 									return ERR_SYNTAX;
 								}
+								
+								Vloz_instrukci(seznam_instrukci, IN_NVSTI, NULL, NULL, NULL ); // generuje se navesti pro end
+								adresa2->instrukce.op1 = Sez_vrat_uk_posledni(seznam_instrukci); // na ktere se bude skakat na konci bloku if
 								
 								chyba = dej_token();		
 								if (chyba!=ERR_OK){
@@ -603,13 +623,19 @@ int ll_prikazy(){
 										}
 										break;
 		// pravidlo 14	<PŘÍKAZY> -> while VÝRAZ do PŘÍKAZY end ; PŘÍKAZY
-		case TNWHILE:	chyba = syntax_vyrazu();		
+		case TNWHILE:	Vloz_instrukci(seznam_instrukci, IN_NVSTI, NULL, NULL, NULL ); // navesti pro dalsi cyklus
+									adresa1 = Sez_vrat_uk_posledni(seznam_instrukci);
+									
+									chyba = syntax_vyrazu();		
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
 									if (token->typ != TNDO){
 										return ERR_SYNTAX;
 									}
+								
+									Vloz_instrukci(seznam_instrukci, IN_PGOTO, (UkTBSPolozka) op3, NULL, NULL );
+									adresa2 = Sez_vrat_uk_posledni(seznam_instrukci);
 						
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
@@ -634,6 +660,12 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
+																	
+									Vloz_instrukci(seznam_instrukci, IN_GOTO, adresa1, NULL, NULL ); // skok na zacatek									
+									
+									Vloz_instrukci(seznam_instrukci, IN_NVSTI, NULL, NULL, NULL ); // navesti pro konec cyklu
+									adresa2->instrukce.op2 = Sez_vrat_uk_posledni(seznam_instrukci);
+									
 									chyba = ll_prikazy();		
 									if (chyba!=ERR_OK){
 										return chyba;
@@ -1038,7 +1070,7 @@ int ll_prikaz_s_id(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-		
+									
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}
@@ -1470,7 +1502,9 @@ int ll_prikaz_s_id_a_rovnase(){
 int ll_volani_prvni_parametr(){
 	printf("ll_volani_prvni_parametr: vstup\n");
 // pravidlo 20 <volani_prvni_parametr> -> VYRAZ , VOLANI_dalsi_PARAMETR
+	op3 = NULL;
 	chyba = syntax_vyrazu();
+	
 	if (chyba == ERR_PRAZDNY_VYRAZ){
 		printf("prvni parametr == nic\n");
 		return ERR_OK;
