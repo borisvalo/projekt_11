@@ -1014,6 +1014,7 @@ int ll_prikaz_s_id(){
 	if ((kam_priradit=malloc(token->delka * sizeof(char)))==NULL){
 		return ERR_INTERNI;
 	}
+	strcpy(kam_priradit,token->data);
 	printf("ll_prikazy_s_id: vstup s %d\n", token->typ);
 	// pravidlo 16	<PŘÍKAZ_S_ID> -> ( volani_prvni_parametr )
 	// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
