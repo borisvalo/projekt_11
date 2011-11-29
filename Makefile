@@ -10,7 +10,7 @@ all: scaner.o parser.o str.o zasobnik.o bvs.o seznam.o interpret.o main.o
 parser.o: parser.c parser.h scaner.h zasobnik.h str.h interpret.h bvs.h
 	$(CC) $(CFLAGS) -c -o parser.o parser.c 
 	
-interpret.o: interpret.c interpret.h string.h bvs.h scaner.h parser.h
+interpret.o: interpret.c interpret.h str.h bvs.h scaner.h parser.h
 	$(CC) $(CFLAGS) -c -o interpret.o interpret.c
 
 str.o: str.c str.h
@@ -22,7 +22,7 @@ scaner.o: scaner.c scaner.h obecne.h
 zasobnik.o: zasobnik.c zasobnik.h parser.h bvs.h
 	$(CC) $(CFLAGS) -c -o zasobnik.o zasobnik.c
 
-bvs.o: bvs.c bvs.h
+bvs.o: bvs.c interpret.h
 	$(CC) $(CFLAGS) -c -o bvs.o bvs.c
 	
 seznam.o: seznam.c interpret.h bvs.h scaner.h parser.h

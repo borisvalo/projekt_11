@@ -3,8 +3,8 @@
 #include <string.h>
 
 #include "scaner.h"
-#include "interpret.h"
 #include "bvs.h"
+#include "interpret.h"
 #include "parser.h"
 /* SEZNAM pro instrukce */
 
@@ -193,4 +193,49 @@ int najdi_prvek(UkTSezPar L, char *K){
 		}
 		
 		return FALSE;
+}
+
+/* Seznam pro ukladani tabulek symoblu (zalohovani) */
+
+// inicializace seznamu
+void Sez_init_zaloha(UkTSezZal L) {
+	L->prvni = NULL;
+}
+
+// zruseni celeho seznamu
+void Sez_zrus_zaloha(UkTSezZal L) {
+	UkTPlzkaSezZal PomUk;
+	while (L->prvni != NULL) {
+		PomUk = L->prvni->ukdalsi;
+		free(L->prvni);
+		L->prvni = PomUk;
+	}
+}
+
+// vlozeni prvku do seznamu
+int insert_first_zaloha(UkTSezZal L, UkTBSUzel tabulka) {
+	UkTPlzkaSezZal PomUk;
+	if ((PomUk = malloc(sizeof(struct plzkaSezZal))) == NULL) {
+		printf("chyba mallocu\n");
+		return ERR_INTERNI;
+	}
+	
+  PomUk->ukdalsi = L->prvni;
+  L->prvni = PomUk;
+  
+  return ERR_OK;
+}
+
+// navrat prvni polozky ze seznamu a nasledne odstraneni
+UkTBSUzel navrat_zalohy(UkTSezZal L){
+	UkTBSUzel tabulka;
+	UkTPlzkaSezZal PomUk;
+	
+	PomUk = L->prvni;
+	tabulka = PomUk->tabulka;
+	L->prvni = PomUk->ukdalsi;
+	free(PomUk);
+	
+	return tabulka;
+		
 }

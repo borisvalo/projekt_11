@@ -12,6 +12,7 @@
 
 
 extern UkTToken token;
+UkTToken token2;
 extern int chyba;
 extern FILE *soubor;
 extern TZasobnik zasobnik;
@@ -292,14 +293,15 @@ int ll_funkce (){
 	printf("prisel id - nazev fce\n");
 	// vlozeni id funkce do TBS funkci
 	
-	Vloz_instrukci(seznam_instrukci, IN_NVSTI, NULL, NULL, NULL ); // navesti pro dalsi cyklus
-	pom_uzel_funkce->adresa = Sez_vrat_uk_posledni(seznam_instrukci);	
+	printf("vlozena instrukce\n");
 	
 	BVSFunkceVloz(&strom_funkci, token->data, NULL);
 	if (BVSFunkceNajdi(strom_funkci, token->data, &pom_uzel_funkce)){
 		printf("redeklarace: ERR_SEMANT\n");
 	}
 	
+	Vloz_instrukci(seznam_instrukci, IN_NVSTI, NULL, NULL, NULL ); // navesti pro dalsi cyklus
+	pom_uzel_funkce->adresa = Sez_vrat_uk_posledni(seznam_instrukci);	
 	
 	if ((pom_uzel_funkce->zasobnik = malloc(sizeof(struct sezPar)))== NULL){
 		return ERR_INTERNI;
@@ -381,6 +383,7 @@ int ll_parametr(){
 			printf("pred_vlozenim\n");
 			insert_last(strom_funkci->data.zasobnik, token->data);
 			(pom_uzel_funkce->pocet_param)++;
+			BVSVloz(&(strom_funkci->data.koren), token->data, NULL);
 		}
 	
 		chyba = ll_dalsi_parametr();		
@@ -411,6 +414,7 @@ int ll_dalsi_parametr(){
 				printf("pred_vlozenim\n");
 				insert_last(strom_funkci->data.zasobnik, token->data);
 				(pom_uzel_funkce->pocet_param)++;
+				BVSVloz(&(strom_funkci->data.koren), token->data, NULL);
 			}
 			chyba = ll_dalsi_parametr();		
 			if (chyba!=ERR_OK){
@@ -434,12 +438,11 @@ int ll_deklarace(){
 		}
 		if (token->typ == IDKONEC){
 			printf("ll_deklarace: ID\n");
-			if (!najdi_prvek(pom_uzel_funkce->zasobnik, token->data)){ // pokud již je v tabulce -> redeklarace -> err
+			if (!BVSNajdi(pom_uzel_funkce->koren, token->data, NULL)){ // pokud již je v tabulce -> redeklarace -> err
 				return ERR_SEMANT;
 			}else{
 				printf("pred_vlozenim\n");
-				insert_last(strom_funkci->data.zasobnik, token->data);
-				(pom_uzel_funkce->pocet_param)++;
+				BVSVloz(&(strom_funkci->data.koren), token->data, NULL);
 			}
 			printf("ll_deklarace: v tabulce\n");
 			chyba = ll_inicializace();		
@@ -465,7 +468,8 @@ int ll_deklarace(){
 	return chyba;
 }
 
-int ll_inicializace(){
+int ll_inicializace(char *nazev){
+	
 	printf("ll_inicializace: vstup\n");
 // pravidlo 9	<INICIALIZACE> -> =VÝRAZ
 // pravidlo 10	<INICIALIZACE> -> Eps
@@ -480,7 +484,7 @@ int ll_inicializace(){
 	if (chyba!=ERR_OK){
 		return chyba;
 	}	
-	/*
+	
 	switch(token->typ){
 		case DESKONEC: 
 		case INTKONEC: 
@@ -502,8 +506,12 @@ int ll_inicializace(){
 		
 		default: return ERR_SEMANT;
 	}
-	*/
-	zmen_data_par(pom_uzel_funkce->zasobnik, token->data, token->typ);
+	/*
+	if ((obsah = malloc(sizeof(struct bsdata)))==NULL){
+		return ERR_INTERNI;
+	}*/
+	
+	BVSVloz(&(pom_uzel_funkce->koren), nazev, obsah);
 	chyba = dej_token();	
 	if (chyba!=ERR_OK){
 		return chyba;
@@ -731,8 +739,6 @@ int ll_prikazy(){
                   strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
 									Vloz_instrukci(seznam_instrukci, IN_READ, (UkTBSPolozka) op2, NULL, (UkTBSPolozka) op3);
 									
-									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
-									// Vloz_instrukci(IN_PRIRAD, op3, NULL, vyhledana_promenna);
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
 										return chyba;
@@ -778,8 +784,6 @@ int ll_prikazy(){
                   BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
 									Vloz_instrukci(seznam_instrukci, IN_TYPE, token->data, NULL, op3);
 									
-									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
-									// Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, vyhledana_promenna);
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
 										return chyba;
@@ -845,8 +849,6 @@ int ll_prikazy(){
                   BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
                   Vloz_instrukci(seznam_instrukci, IN_FIND, op1, op2, op3);
 									
-									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
-									// Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, vyhledana_promenna);
 									//další příkazy
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
@@ -873,8 +875,6 @@ int ll_prikazy(){
                   BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
                   Vloz_instrukci(seznam_instrukci, IN_SORT, token->data, NULL, op3);
 									
-									//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
-									// Vloz_instrukci(IN_PRIRAD, op3, NULL, vyhledana_promenna);
 									//další příkazy
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
@@ -992,8 +992,6 @@ int ll_prikazy(){
                   	BVSNajdi(pom_tab_sym, generuj_klic(1), (UkTBSPolozka) op3);
                   	Vloz_instrukci(seznam_instrukci, IN_SUBSTR, op1, pom_pole, op3);
 									
-										//TODO: pridat funkci generovani instrukce pro prirazeni do promenne
-										// Vloz_instrukci(IN_PRIRAD, op3, NULL, vyhledana_promenna);
 										chyba=dej_token();
 										if (chyba!=ERR_OK){
 											return chyba;
@@ -1021,7 +1019,7 @@ int ll_prikazy(){
 										}
 										break;
 	}//switch 
-	printf("vracim prazdne prikazy %d \n", chyba);
+	printf("vracim prikazy %d \n", chyba);
 	return ERR_OK;
 }//fce
 
@@ -1065,22 +1063,35 @@ int ll_prikaz_s_id(){
 	}
 	switch (token->typ){
 		// pravidlo 16	<PŘÍKAZ_S_ID> -> ( PARAMETR )
-		case ZAVLEVA: chyba=ll_volani_prvni_parametr();	//TODO: volani funkce
-									free(kam_priradit);	
+		case ZAVLEVA: free(kam_priradit);	
+									chyba=ll_volani_prvni_parametr();	//TODO: volani funkce
+									
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									
+									// )
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
+									}
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									// ;
+									if (token->typ != STREDNIK){
+										return ERR_SYNTAX;
+									}
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
 									}
 									break;
 		// pravidlo 17	<PŘÍKAZ_S_ID> -> = PŘÍKAZ_S_ID_A_ROVNASE
 		case ROVNASEKONEC:	printf("ll_prikaz_s_id: prislo = %d\n", token->typ);
 												chyba = ll_prikaz_s_id_a_rovnase();		
 												if(!BVSNajdi (pom_tab_sym, kam_priradit, op1)){
-													//return ERR_SEMANT; // TODO: zkontrolovat logiku hledani
-													printf("semanticka chyba\n");
+													return ERR_SEMANT; 
 												}
 												Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, op1);
 												free(kam_priradit);
@@ -1107,30 +1118,43 @@ int ll_prikaz_s_id_a_rovnase(){
 	}
 	printf("ll_prikazy_s_id_a_rovnase: token: %d\n", token->typ);
 	
+	if (token_alokuj(&token2) != ERR_OK){
+		return ERR_INTERNI;
+	}
 	switch (token->typ){
-		//volani uzivatelske fce
-		case IDKONEC:	chyba = dej_token();
-									if (chyba!=ERR_OK){
-										return chyba;
+		//volani uzivatelske fce nebo prirazeni vyrazu
+		case IDKONEC:	printf("zkousim fce\n");
+									if (!BVSFunkceNajdi (strom_funkci, token->data, NULL)){ // if nalezeno
+										printf("byla to fce\n");
+										chyba = dej_token();
+										if (chyba!=ERR_OK){
+											return chyba;
+										}
+										if (token->typ != ZAVLEVA){
+											return ERR_SYNTAX;
+										}
+										chyba = ll_volani_prvni_parametr();
+										if (chyba != ERR_OK){
+											return chyba;
+										}
+										if (token->typ != ZAVPRAVA) {
+											return ERR_SYNTAX;
+										}
+										printf("prisla prava ukoncujici zavorka\n");
+									}else{ // neni to funkce, zkusime vyraz
+										printf("nebyla to fce %s\n", token->data);
+										chyba = syntax_vyrazu();
+										if (chyba == ERR_PRAZDNY_VYRAZ){
+											return ERR_SYNTAX;
+										}else if (chyba != ERR_OK){
+											return chyba;
+										}
 									}
-									if (token->typ != ZAVLEVA){
-										return ERR_SYNTAX;
-									}
-									
-									chyba = ll_volani_prvni_parametr();
-									if (chyba != ERR_OK){
-										return chyba;
-									}
-									
-									if (token->typ != ZAVPRAVA) {
-										return ERR_SYNTAX;
-									}
-									printf("prisla prava ukoncujici zavorka\n");
 									chyba = dej_token();
 									if (chyba != ERR_OK){
 										return chyba;
 									}
-									
+								
 									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}	
@@ -1508,7 +1532,10 @@ int ll_volani_prvni_parametr(){
 	if (chyba == ERR_PRAZDNY_VYRAZ){
 		printf("prvni parametr == nic\n");
 		return ERR_OK;
-	}else if(token->typ == CARKA){
+	}else if (chyba != ERR_OK){
+		return chyba;
+	}
+	if(token->typ == CARKA){
 		printf("prvni_parametr prijat, volam dalsi\n");
 		chyba = ll_volani_dalsi_parametr();
 		return chyba;
@@ -1530,7 +1557,7 @@ int ll_volani_dalsi_parametr(){
 		chyba= ll_volani_dalsi_parametr();
 		return chyba;
 	}
-	printf("konec\n");
+	printf("ll_dalsi parametr: konec\n");
 	return ERR_OK;
 }
 
@@ -1541,18 +1568,6 @@ int syntakticky_analyzator(){
 	chyba = ll_funkce();
 	return chyba;
 }
-
-
-
-
-
-
-// TODO ošetřit všechny výskyty chyba
-
-
-
-
-
 
 
 
@@ -1617,7 +1632,6 @@ int syntax_vyrazu() {
 
 // testovat return funkce ZISKEJ_DALSI_TOKEN ptz by to mohla byt lex chyba !!!!!!!!
 
-// TODO Kontrola vyrazu !!!!!!!!!!!
 
 
 
@@ -1664,7 +1678,7 @@ int syntax_vyrazu() {
 				    pom_prvek.typ = token->typ;
 				    
 				    if(token->typ == IDKONEC) {
-				    	if(!BVSNajdi(pom_uzel_funkce->koren, token->data, obsah)) {
+				    	if(BVSNajdi(pom_uzel_funkce->koren, token->data, obsah)) {
 							printf("Spatna tabulka symbolu1\n");
 				    		return ERR_SEMANT;
 				    	}
@@ -1742,8 +1756,8 @@ int syntax_vyrazu() {
 						pom_prvek.typ = token->typ;
 				    
 				    if(token->typ == IDKONEC) {
-				    	if(!BVSNajdi(pom_uzel_funkce->koren, token->data, obsah)) {
-							printf("Spatna tabulka symbolu2\n");
+				    	if(BVSNajdi(pom_uzel_funkce->koren, token->data, obsah)) {
+								printf("Spatna tabulka symbolu2-----------\n");
 				    		return ERR_SEMANT;
 				    	}
 				    	pom_prvek.uk_na_prvek_ts = obsah;

@@ -5,7 +5,7 @@
 
 #include "interpret.h"
 
-#include "string.h"
+#include "str.h"
 #include "bvs.h"
 #include "scaner.h"
 #include "parser.h"

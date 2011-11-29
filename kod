@@ -1,4 +1,12 @@
 --[[ funkce main by mela byt posledni definovanou funkci ]]
+function secti(a,b)
+local c;
+
+c=a+b;
+secti(c,b);
+
+end;
+
 function main() --Hlavni telo programu
 	local a;
 	local vyslakshdoiuwdh;

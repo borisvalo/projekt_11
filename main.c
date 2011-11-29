@@ -44,6 +44,7 @@ char *pom_token_data;
 UkTBSUzel pole_stromu;
 int delka_pole_stromu;
 
+UkTSezZal zaloha_stromy;
 int main(){
 	
 	
@@ -53,14 +54,14 @@ int main(){
 		printf("main: otevreni souboru\n");
 		return ERR_INTERNI;
   }
-	printf("main: druha kontrola\n");
-	token = NULL;
+	//token = NULL;
 	chyba = zasobnik_init( &zasobnik);
 	if (chyba!=ERR_OK){
 	//TODO: zavrit soubor
 	// odalokovat token
 		return chyba;
 	}
+	
 	seznam_instrukci = malloc(sizeof(struct seznamInstr));
 	Sez_init(seznam_instrukci);
 	//seznam_instrukci = malloc(sizeof(struct bsfunkce));
@@ -70,6 +71,13 @@ int main(){
 	if ((obsah = malloc(sizeof (TBSPolozka)))==NULL){
 		return ERR_INTERNI;
 	}
+	
+	if ((zaloha_stromy = malloc(sizeof(struct sezZal)))==NULL){
+		return ERR_INTERNI;
+	}
+	
+	printf("main: druha kontrola\n");
+	Sez_init_zaloha(zaloha_stromy);
 	
 	chyba = syntakticky_analyzator();
 	

@@ -9,6 +9,99 @@
 
 //VYCTOVE TYPY --------------------------------------------
 
+
+
+
+
+
+
+//potrebne definice
+#define MAX_ARR     20
+#define TRUE         0
+#define FALSE        1
+#define KONEC_OK     0
+#define KONEC_CHYBA  1
+
+
+
+//---------------- struktury pro BVS funkci ------------------
+typedef struct bsfunkpol {
+int pocet_param; // promenna pro ulozeni poctu parametru funkce
+struct bsuzel *koren; // koren tabulky symbolu dane fce
+struct sezPar *zasobnik;
+struct plzkaSez *adresa; // inception
+} TBSFunkPol, *UkTBSFunkPol;
+
+typedef struct bsfunkce {
+char *klic; //retezec slouzici jako klic - nazev funkce
+struct bsfunkpol data; //ukazatel na strukturu dat
+
+struct bsfunkce *luk; //ukazatel na leveho potomka
+struct bsfunkce *puk; //ukazatel na praveho potomka
+} TBSFunkce, *UkTBSFunkce;
+
+
+
+//samotna data
+typedef union unidata {
+    double   dataCis;     //datovy typ number
+    char    *dataRet;     //datovy typ string
+    int      dataBool;    //datovy typ boolean
+} TBSData;
+
+//vyctovy typ datovych typu
+typedef enum enTTDat {
+    TDCISLO,              //cislo
+    TDRETEZEC,            //retezec
+    TDBOOL,               //boolean
+    TDNIL,                //nil
+} TTDat;
+
+//struktura dat
+typedef struct bsdata {
+    int typ;          //typ dat
+    TBSData data;         //union s daty
+} TBSPolozka, *UkTBSPolozka;
+
+//struktura uzlu
+typedef struct bsuzel {
+	char           *klic; //retezec slouzici jako klic
+	struct bsdata   data; //ukazatel na strukturu dat
+    
+	struct bsuzel   *luk; //ukazatel na leveho potomka
+	struct bsuzel   *puk; //ukazatel na praveho potomka
+} TBSUzel, *UkTBSUzel;
+
+//FUNKCE
+void BVSInit (UkTBSUzel *Kor);
+int  BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah);
+void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah);
+void BVSNahradZaPraveho(UkTBSUzel PtrReplaced, UkTBSUzel *Kor);
+void BVSVymaz (UkTBSUzel *Kor, char *K);
+void BVSZrus (UkTBSUzel *Kor);
+
+
+//dalsi by Paulie
+int Pole_realokuj(UkTBSUzel *ret, int delka);
+void Pole_uvolni(UkTBSUzel ret);
+int Pole_alokuj(UkTBSUzel *ret, int pocet);
+
+void BVSFunkceInit (UkTBSFunkce *Kor);
+int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol *obsah);
+void BVSFunkceVloz (UkTBSFunkce *Kor, char *K, UkTBSFunkPol obsah);
+void BVSFunkceZrus (UkTBSFunkce *Kor);
+
+
+
+
+
+
+
+
+
+
+
+
 // typy instrukci
 typedef enum nazvyInstrukci {
     IN_READ,     // read        | op     | /   | cil  0
@@ -84,8 +177,21 @@ typedef struct plzkaSezPar {
 typedef struct sezPar{
   struct plzkaSezPar *prvni;    // prvni polozka
   struct plzkaSezPar *aktivni;  // aktivni polozka
-  struct plzkaSezPar *posledni;  // aktivni polozka
+  struct plzkaSezPar *posledni;  // posledni polozka
 } TSezPar, *UkTSezPar;
+
+/* SEZNAM pro zalohu tabulek symbolu */
+
+//struktura pro polozky seznamu
+typedef struct plzkaSezZal {
+  struct bsuzel *tabulka;          //ukazatel na strukturu instrukce
+  struct plzkaSezZal *ukdalsi;  //ukazatel na dalsi prvek seznamu
+} TPlzkaSezZal, *UkTPlzkaSezZal;
+
+//struktura celeho seznamu
+typedef struct sezZal{
+  struct plzkaSezZal *prvni;    // prvni polozka
+} TSezZal, *UkTSezZal;
 
 
 
@@ -113,3 +219,9 @@ void set_nasl(UkTSezPar L);
 void *hodnota_aktivniho(UkTSezPar L);
 int zmen_data_par(UkTSezPar L, char *ret, int typ);
 int najdi_prvek(UkTSezPar L, char *K);
+
+// funkce pro seznam zaloh tabulek symbolu
+void Sez_init_zaloha(UkTSezZal L);
+void Sez_zrus_zaloha(UkTSezZal L);
+int insert_first_zaloha(UkTSezZal L, UkTBSUzel tabulka);
+//UkTBSUzel navrat_zalohy(UkTSezZal L);

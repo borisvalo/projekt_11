@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bvs.h"
+#include "interpret.h"
 #include "str.h"
 #include "parser.h"
 
@@ -28,7 +28,9 @@ int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah)	{
             }
         }
         else {
-            obsah = &(Kor->data); //vratime ukazatel na strukturu dat
+        		if(obsah != NULL){
+            	obsah = &(Kor->data); //vratime ukazatel na strukturu dat
+            }
             return TRUE;
         }
     }	
@@ -148,7 +150,7 @@ void BVSFunkceInit (UkTBSFunkce *Kor) {
 
 int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol *obsah)	{
 	if (Kor == NULL) { //neni v cem hledat
-		printf("null\n");
+			printf("bvs_funkcenajdi: koren je null\n");
         return FALSE;
     }
     else {
