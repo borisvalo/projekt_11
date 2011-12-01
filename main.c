@@ -36,7 +36,7 @@ void *op3;
 
 // ---- nove pridano
 UkTBSFunkce strom_funkci;
-UkTBSFunkPol pom_uzel_funkce;
+UkTBSFunkPol uzel_aktualni_funkce;
 char *pom_token_data;
 // --- konec novyho
 
@@ -83,9 +83,9 @@ int main(){
 	
 	Sez_zrus(seznam_instrukci);
 	
-	Sez_zrus_funkce(pom_uzel_funkce->zasobnik);
+	Sez_zrus_funkce(uzel_aktualni_funkce->zasobnik);
 	
-	BVSZrus (&pom_uzel_funkce->koren);
+	BVSZrus (&uzel_aktualni_funkce->koren);
 	
 	token_uvolni(token);
 	zasobnik_free(&zasobnik);
