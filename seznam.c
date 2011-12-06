@@ -9,6 +9,8 @@
 /* SEZNAM pro instrukce */
 
 extern UkTToken token;
+char retezec[] = "function";
+
 // inicializace seznamu
 void Sez_init(UkTSezInstr L) {
 	L->aktivni = NULL;
@@ -154,7 +156,7 @@ void *hodnota_aktivniho(UkTSezPar L) {
 	return &(L->aktivni->parametr);
 }
 
-int zmen_data_par(UkTSezPar L, char *ret, int typ){
+int zmen_data_par(UkTSezPar L, void *ret, int typ){
 	
 	switch(typ){
 		case RETEZEC: if ((L->posledni->parametr.data->data.dataRet = malloc(strlen(ret)*sizeof(char)))==NULL){
@@ -178,7 +180,7 @@ int zmen_data_par(UkTSezPar L, char *ret, int typ){
 	
 	return ERR_OK;
 }
-int najdi_prvek(UkTSezPar L, char *K){
+int najdi_prvek_lok(UkTSezPar L, char *K){
 		if (L==NULL){
 			printf("nealokovan zasobnik\n");
 			return ERR_INTERNI;
@@ -195,16 +197,138 @@ int najdi_prvek(UkTSezPar L, char *K){
 		return FALSE;
 }
 
-/* Seznam pro ukladani tabulek symoblu (zalohovani) */
+// zkopirovani parametru z lokalniho zasobniku
+void kopiruj_parametry(UkTSezPar zas_zpracovani, UkTSezPar zasobnik){
+		/*
+		if((retezec = malloc((strlen(ZNACKA)+1) * sizeof(char))) == NULL){
+				return ERR_INTERNI;
+		}
+		
+		strcpy(retezec,ZNACKA);
+		*/
+		insert_last(zas_zpracovani, retezec); // vlozeni znackz, ze zde zacina dalsi funkce
+		
+		set_first(zasobnik);
+		while(zasobnik->aktivni != NULL){
+			insert_last(zas_zpracovani, zasobnik->aktivni->parametr.klic);
+			set_nasl(zasobnik);	
+		}
+		
+}
 
-// inicializace seznamu
-void Sez_init_zaloha(UkTSezZal L) {
+// zkopirovani promennych z lokalni tabulky symbolu
+void kopiruj_promenne(UkTSezPar zas_zpracovani, UkTBSUzel *UkKor) {
+	if ((*UkKor)->luk != NULL) { //jestli je neco vlevo, jdeme tam
+		kopiruj_promenne(zas_zpracovani, &((*UkKor)->luk));
+	}
+	if ((*UkKor)->puk != NULL) { //i vpravo
+		kopiruj_promenne(zas_zpracovani, &((*UkKor)->puk));
+	}
+	
+	insert_last(zas_zpracovani, (*UkKor)->klic); // zkopirovani klice
+	
+	switch((*UkKor)->data.typ){
+		case TDCISLO:
+			zmen_data_par(zas_zpracovani, (double*)&(*UkKor)->data.data.dataCis, (*UkKor)->data.typ);
+			break;
+		case TDRETEZEC:
+			zmen_data_par(zas_zpracovani, (char*)(*UkKor)->data.data.dataRet, (*UkKor)->data.typ);
+			break;
+		case TDBOOL:
+			zmen_data_par(zas_zpracovani, (int*)&(*UkKor)->data.data.dataBool, (*UkKor)->data.typ);
+			break;
+		case TDNIL:
+			zmen_data_par(zas_zpracovani, NULL, (*UkKor)->data.typ);
+			break;
+	}
+	
+}
+
+int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka ukazatel){
+		UkTPlzkaSezPar PomUk;
+		/*
+		if((retezec = malloc((strlen(ZNACKA)+1) * sizeof(char))) == NULL){
+				return ERR_INTERNI;
+		}
+		
+		strcpy(retezec,ZNACKA);
+		*/
+		
+		if (L == NULL){
+			printf("nealokovan zasobnik\n");
+			return ERR_INTERNI;
+		}
+		
+		set_first(L);
+		
+		while(L->aktivni != NULL){
+			if(strcmp(L->aktivni->parametr.klic, retezec) == 0){
+				PomUk = L->aktivni;
+			}
+			set_nasl(L);
+		}
+		
+		L->aktivni = PomUk;
+		
+		while(L->aktivni != NULL){
+			if(strcmp(L->aktivni->parametr.klic, K) == 0){
+					ukazatel->typ = L->aktivni->parametr.data->typ;
+					switch(L->aktivni->parametr.data->typ){
+						case TDCISLO:
+							ukazatel->data.dataCis = L->aktivni->parametr.data->data.dataCis;
+							break;
+						case TDRETEZEC:
+							if ((ukazatel->data.dataRet = malloc(strlen(L->aktivni->parametr.data->data.dataRet)*sizeof(char)))==NULL){
+								return ERR_INTERNI;
+							}
+							strcpy(ukazatel->data.dataRet, L->aktivni->parametr.data->data.dataRet);
+							break;
+						case TDBOOL:
+							ukazatel->data.dataCis = L->aktivni->parametr.data->data.dataBool;
+							break;
+						case TDNIL:
+							break;
+						}
+					
+					return TRUE;
+			}
+			
+			set_nasl(L);
+		}
+		
+		return FALSE;
+}
+// vymazani promennych pro jednu instanci funkce
+void vymaz_promenne(UkTSezPar L){
+	UkTPlzkaSezPar PomUk;
+	char *retezec = "function";
+	set_first(L);
+	while(L->aktivni != NULL){
+		if(strcmp(L->aktivni->parametr.klic, retezec) == 0){
+				PomUk = L->aktivni;
+		}
+		set_nasl(L);
+	}
+	
+	L->aktivni = PomUk;
+	
+	while (L->aktivni != NULL) {
+		PomUk = L->aktivni->ukdalsi;
+		free(L->aktivni);
+		L->aktivni = PomUk;
+	}
+   
+}
+/* Funkce pro praci se zasobnikem adres */
+
+// inicializace zasobniku
+void zas_adres_in(UkTZasAdr L) {
 	L->prvni = NULL;
 }
 
-// zruseni celeho seznamu
-void Sez_zrus_zaloha(UkTSezZal L) {
-	UkTPlzkaSezZal PomUk;
+// zruseni celeho zasobniku
+void zas_adres_zrus(UkTZasAdr L) {
+	UkTPlzkaZas PomUk;
 	while (L->prvni != NULL) {
 		PomUk = L->prvni->ukdalsi;
 		free(L->prvni);
@@ -212,10 +336,10 @@ void Sez_zrus_zaloha(UkTSezZal L) {
 	}
 }
 
-// vlozeni prvku do seznamu
-int insert_first_zaloha(UkTSezZal L, UkTBSUzel tabulka) {
-	UkTPlzkaSezZal PomUk;
-	if ((PomUk = malloc(sizeof(struct plzkaSezZal))) == NULL) {
+// vlozeni prvku do zasobniku adres
+int Push_adr(UkTZasAdr L, UkTInstr adresa) {
+	UkTPlzkaZas PomUk;
+	if ((PomUk = malloc(sizeof(struct plzkaZas))) == NULL) {
 		printf("chyba mallocu\n");
 		return ERR_INTERNI;
 	}
@@ -227,15 +351,26 @@ int insert_first_zaloha(UkTSezZal L, UkTBSUzel tabulka) {
 }
 
 // navrat prvni polozky ze seznamu a nasledne odstraneni
-UkTBSUzel navrat_zalohy(UkTSezZal L){
-	UkTBSUzel tabulka;
-	UkTPlzkaSezZal PomUk;
+/*
+UkTInstr Pop_adr(UkTZasAdr L){
+	UkTInstr adresa;
+	UkTPlzkaZas PomUk;
 	
 	PomUk = L->prvni;
-	tabulka = PomUk->tabulka;
+	adresa = PomUk->adresa;
 	L->prvni = PomUk->ukdalsi;
 	free(PomUk);
 	
-	return tabulka;
+	return adresa;
+		
+}
+*/
+void Pop_adr(UkTZasAdr L, UkTInstr adresa){
+	UkTPlzkaZas PomUk;
+	
+	PomUk = L->prvni;
+	adresa = PomUk->adresa;
+	L->prvni = PomUk->ukdalsi;
+	free(PomUk);
 		
 }

@@ -34,7 +34,7 @@ struct plzkaSez *adresa; // inception
 
 typedef struct bsfunkce {
 char *klic; //retezec slouzici jako klic - nazev funkce
-struct bsfunkpol data; //ukazatel na strukturu dat
+struct bsfunkpol *data; //ukazatel na strukturu dat
 
 struct bsfunkce *luk; //ukazatel na leveho potomka
 struct bsfunkce *puk; //ukazatel na praveho potomka
@@ -132,7 +132,11 @@ typedef enum nazvyInstrukci {
     //---------------------------------------------
     IN_PRIRAD,   // prirazeni   | op     | /   | cil 20
     //---------------------------------------------
-    IN_KONEC,    // konec       |                    21
+    IN_POP,      // POP adrr    | funkce | cil | /   21
+    IN_PUSH,     // PUSH adrr   | funkce | adr | /   22
+    IN_HLEDEJ,   // hledani     | kde    | co  | cil 23
+    //---------------------------------------------
+    IN_KONEC,    // konec       |                    24
 } TNazInstr;
 
 //STRUKTURY -----------------------------------------------
@@ -180,20 +184,18 @@ typedef struct sezPar{
   struct plzkaSezPar *posledni;  // posledni polozka
 } TSezPar, *UkTSezPar;
 
-/* SEZNAM pro zalohu tabulek symbolu */
+/* Zasobnik navratovych adres */
 
 //struktura pro polozky seznamu
-typedef struct plzkaSezZal {
-  struct bsuzel *tabulka;          //ukazatel na strukturu instrukce
-  struct plzkaSezZal *ukdalsi;  //ukazatel na dalsi prvek seznamu
-} TPlzkaSezZal, *UkTPlzkaSezZal;
+typedef struct plzkaZas {
+  TInstr *adresa;          //ukazatel na strukturu instrukce
+  struct plzkaZas *ukdalsi;  //ukazatel na dalsi prvek seznamu
+} TPlzkaZas, *UkTPlzkaZas;
 
 //struktura celeho seznamu
-typedef struct sezZal{
-  struct plzkaSezZal *prvni;    // prvni polozka
-} TSezZal, *UkTSezZal;
-
-
+typedef struct zasAdr{
+  struct plzkaZas *prvni;    // prvni polozka
+} TZasAdr, *UkTZasAdr;
 
 //FUNKCE --------------------------------------------------
 
@@ -217,11 +219,17 @@ int insert_last(UkTSezPar L, char *ret);
 void set_first(UkTSezPar L);
 void set_nasl(UkTSezPar L);
 void *hodnota_aktivniho(UkTSezPar L);
-int zmen_data_par(UkTSezPar L, char *ret, int typ);
-int najdi_prvek(UkTSezPar L, char *K);
+int zmen_data_par(UkTSezPar L, void *ret, int typ);
+int najdi_prvek_lok(UkTSezPar L, char *K);
+void kopiruj_parametry(UkTSezPar zas_zpracovani, UkTSezPar zasobnik);
+void kopiruj_promenne(UkTSezPar zas_zpracovani, UkTBSUzel *UkKor);
+int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka ukazatel);
+void vymaz_promenne(UkTSezPar L);
 
-// funkce pro seznam zaloh tabulek symbolu
-void Sez_init_zaloha(UkTSezZal L);
-void Sez_zrus_zaloha(UkTSezZal L);
-int insert_first_zaloha(UkTSezZal L, UkTBSUzel tabulka);
-//UkTBSUzel navrat_zalohy(UkTSezZal L);
+
+// funkce pro praci se zasobnikem navratovych adres
+
+void zas_adres_in(UkTZasAdr L);
+void zas_adres_zrus(UkTZasAdr L);
+int Push_adr(UkTZasAdr L, UkTInstr adresa);
+void Pop_adr(UkTZasAdr L, UkTInstr adresa);

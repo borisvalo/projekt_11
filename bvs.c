@@ -9,6 +9,7 @@
 #include "str.h"
 #include "parser.h"
 
+
 //Inicializace stromu
 void BVSInit (UkTBSUzel *Kor) {
     (*Kor) = NULL;
@@ -38,12 +39,14 @@ int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah)	{
 
 void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {	
 	if ((*Kor) == NULL) { //vytvorime novy uzel
+
         UkTBSUzel ptr;
         if ((ptr = (UkTBSUzel) malloc(sizeof(TBSUzel))) == NULL) {
             printf("chyba mallocu!\n");
         }
         
-        Ret_alokuj(&(ptr->klic), 10); //alokujeme misto pro klic
+        
+        Ret_alokuj(&(ptr->klic), strlen(K)+1); //alokujeme misto pro klic
         
         ptr->luk = NULL;
         ptr->puk = NULL;
@@ -58,8 +61,7 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         }
         else {
         				if(obsah != NULL){
-        					ptr->data.data = obsah->data
-        					;
+        					ptr->data.data = obsah->data;        					
         				}
         }
         
@@ -164,7 +166,9 @@ int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol *obsah)	{
         }
         else if(strcmp(Kor->klic, K) == 0){
 			printf("spravne\n");
-            *obsah = &(Kor->data); //vratime ukazatel na strukturu dat
+				
+			*obsah = Kor->data; //vratime ukazatel na strukturu dat
+			
             return TRUE;
         }else{
 			printf("neocekavana chyba\n");
@@ -181,14 +185,19 @@ void BVSFunkceVloz (UkTBSFunkce* Kor, char *K, UkTBSFunkPol obsah) {
         }
         Ret_alokuj(&(ptr->klic), strlen(K)+1); //alokujeme misto pro klic
         
+        if((ptr->data = (UkTBSFunkPol) malloc(sizeof(struct bsfunkpol))) == NULL){
+				printf("chyba mallocu \n");
+		}
+		
         ptr->luk = NULL;
         ptr->puk = NULL;
         strcpy(ptr->klic, K); //vlozime klic
         
         printf("%s\n", ptr->klic);
-        ptr->data.pocet_param = 0;
-        ptr->data.koren = NULL;
-        ptr->data.zasobnik = NULL;
+        ptr->data->pocet_param = 0;
+        ptr->data->koren = NULL;
+        ptr->data->zasobnik = NULL;
+        ptr->data->adresa = NULL;
         
         (*Kor) = ptr; //nakonec novy uzel vlozime primo do stromu
     }
@@ -201,9 +210,9 @@ void BVSFunkceVloz (UkTBSFunkce* Kor, char *K, UkTBSFunkPol obsah) {
         }
         else { //obnovime data aktualniho uzlu
 			if(obsah != NULL){
-				(*Kor)->data.pocet_param = obsah->pocet_param;
-				(*Kor)->data.koren = obsah->koren;
-				(*Kor)->data.zasobnik = obsah->zasobnik;
+				(*Kor)->data->pocet_param = obsah->pocet_param;
+				(*Kor)->data->koren = obsah->koren;
+				(*Kor)->data->zasobnik = obsah->zasobnik;
 			}
         }
     }

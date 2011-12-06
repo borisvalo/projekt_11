@@ -44,7 +44,9 @@ char *pom_token_data;
 UkTBSUzel pole_stromu;
 int delka_pole_stromu;
 
-UkTSezZal zaloha_stromy;
+UkTZasAdr zas_navr_adres;
+UkTSezPar zas_zpracovani;
+
 int main(){
 	
 	
@@ -64,20 +66,23 @@ int main(){
 	
 	seznam_instrukci = malloc(sizeof(struct seznamInstr));
 	Sez_init(seznam_instrukci);
-	//seznam_instrukci = malloc(sizeof(struct bsfunkce));
-	//Sez_init_funkce(strom_funkci);
+	
+	strom_funkci = malloc(sizeof(struct bsfunkce));
+	BVSFunkceInit(&strom_funkci);
+	
 	delka_pole_stromu=1;
+	
+	zas_navr_adres = malloc(sizeof(struct zasAdr));
+	zas_adres_in(zas_navr_adres);
+	
+	zas_zpracovani = malloc(sizeof(struct sezPar));
+	Sez_init_funkce(zas_zpracovani);
 	
 	if ((obsah = malloc(sizeof (TBSPolozka)))==NULL){
 		return ERR_INTERNI;
 	}
 	
-	if ((zaloha_stromy = malloc(sizeof(struct sezZal)))==NULL){
-		return ERR_INTERNI;
-	}
-	
 	printf("main: druha kontrola\n");
-	Sez_init_zaloha(zaloha_stromy);
 	
 	chyba = syntakticky_analyzator();
 	

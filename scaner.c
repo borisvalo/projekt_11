@@ -102,7 +102,9 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                     stav = RovnaSe;
                 }
                 else if (symbol == '^') {
-                    return MOCNINA;
+					// dodelano a opraveno na MOCNINA
+                    strukt->typ = MOCNINA;
+                    return KONEC_OK;
                 }
                 else if (symbol == '>') {
                     stav = Vetsitko;

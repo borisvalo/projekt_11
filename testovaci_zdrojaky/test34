@@ -39,7 +39,7 @@ function hello_kitty(lizatko)
 
 	return cau;
 
-end;
+end
 
 
 --[[ DODELAT:   ]]
@@ -67,10 +67,10 @@ function main()
 	local bonbon;
 	local necum = 4.65;
 	local idiot = "projekt do IFJ";
-	local blbecek = type(idiot);
+	local blbecek;
 	local number;
 
-
+	blbecek = type(idiot)
 	if (0 == "0") == false then
 		write("Spravne vyhodnocovani.\n");
 	else

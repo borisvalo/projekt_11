@@ -1,6 +1,6 @@
 --[[ ]]
 function factorial(n)
-	local temp_result;
+	local temp_result = 2;
 	local decremented_n;
 	local result;
 

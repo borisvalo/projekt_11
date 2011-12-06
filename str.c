@@ -6,9 +6,15 @@
 
 //alokace pameti pro retezec
 void Ret_alokuj(TRetezec *ret, int pocet) {
+	if(ret == NULL){
+			printf("doslo k velmi zavazne chybe ze ktere se jen tak nedostaneme \n");
+			return;
+	}
+
     if (((*ret) = (TRetezec) malloc(pocet * sizeof(char))) == NULL) {
         printf("chyba malloc!!\n");
     }
+
 }
 
 //ulozeni retezce

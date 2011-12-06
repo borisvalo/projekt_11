@@ -12,6 +12,9 @@
 //#include "ial.c"
 
 extern UkTToken token;
+extern UkTZasAdr zas_navr_adres; // zasobnik navratovych adres
+extern UkTSezPar zas_zpracovani; // globalni zasobnik promennych
+
 int Vloz_instrukci(UkTSezInstr seznam, int typ, void *op1, void *op2, void *op3) {
     TInstr polozka;
     
@@ -296,6 +299,26 @@ int Interpret(UkTSezInstr list) {
                 }
                 break;
                 
+            // instrukce pro vytazeni navratove adresy ze zasobniku
+            case IN_POP:
+					if((UkTBSFunkPol)ukinstr->op1 != NULL && (UkTInstr)ukinstr->op2 != NULL){
+						 Pop_adr(zas_navr_adres, (UkTInstr)ukinstr->op2);
+						 vymaz_promenne(zas_zpracovani);
+					}
+				break;
+				
+			// instrukce pro vlozeni navratove adresy na zasobnik 
+			case IN_PUSH:
+					if((UkTBSFunkPol)ukinstr->op1 != NULL && (UkTInstr)ukinstr->op2 != NULL){
+						Push_adr(zas_navr_adres, (UkTInstr)ukinstr->op2);	
+						kopiruj_parametry(zas_zpracovani, ((UkTBSFunkPol)ukinstr->op1)->zasobnik);	
+						kopiruj_promenne(zas_zpracovani, &((UkTBSFunkPol)ukinstr->op1)->koren);
+					}
+				break;
+			// instrukce pro hledani promenne v globalnim zasobniku 
+			case IN_HLEDEJ:
+					najdi_prom((UkTSezPar)ukinstr->op1, (char *)ukinstr->op2, (UkTBSPolozka)ukinstr->op3);
+				break;
             //konec interpretu
             case IN_KONEC:
                 return KONEC_OK;
