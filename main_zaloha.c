@@ -21,15 +21,14 @@
 UkTToken token;
 FILE *soubor;
 int chyba;
-TZasobnikInt zas_int;
-TZasobnikUk zas_uk;
+TZasobnik zasobnik;
 UkTBSUzel tab_sym;
 UkTBSUzel pom_tab_sym;
 UkTBSUzel nazvy_funkci; // kam odkazuje navesti
 UkTBSPolozka obsah;
 UkTSezInstr seznam_instrukci;
 unsigned int klic_cislo=0;
-//TPrvek prvek_pomocny;
+TPrvek prvek_pomocny;
 int typ_instrukce;
 UkTBSPolozka op1; 
 UkTBSPolozka op2; 
@@ -59,7 +58,7 @@ int main(){
 		return ERR_INTERNI;
   }
 	//token = NULL;
-	chyba = zasobnik_init(&zas_uk, &zas_int);
+	chyba = zasobnik_init( &zasobnik);
 	if (chyba!=ERR_OK){
 	//TODO: zavrit soubor
 	// odalokovat token
@@ -96,17 +95,9 @@ int main(){
 		printf(" ----- VSTUP PRIJAT ----- \n");
 	}
 	
-	//Interpret(seznam_instrukci);
-	chyba = Interpret(seznam_instrukci);
-	if (chyba != ERR_OK){
-		printf(" ----- VSTUP NEPRIJAT s kodem: %d ------\n",chyba);
-		return chyba;
-	}else{
-		printf(" ----- VSTUP PRIJAT ----- \n");
-	}
+	Interpret(seznam_instrukci);
 	
-	
-		printf("*************Vypis zasobniku****klokan******\n");
+		printf("*************Vypis zasobniku**********\n");
 	set_first(zas_zpracovani);
 	while(zas_zpracovani->aktivni != NULL){
 		switch (zas_zpracovani->aktivni->parametr.data->typ){
@@ -114,7 +105,7 @@ int main(){
 				break;
 			case TDRETEZEC:	printf("-> ->Klic: %s, dataRet: %s, typ: %d\n", zas_zpracovani->aktivni->parametr.klic, zas_zpracovani->aktivni->parametr.data->data.dataRet, zas_zpracovani->aktivni->parametr.data->typ);
 				break;
-			case TDBOOL: printf("-> ->Klic: %s, dataBool: %d, typ: %d\n", zas_zpracovani->aktivni->parametr.klic, zas_zpracovani->aktivni->parametr.data->data.dataBool, zas_zpracovani->aktivni->parametr.data->typ);
+			case TDBOOL: printf("-> ->Klic: %s, dataRet: %d, typ: %d\n", zas_zpracovani->aktivni->parametr.klic, zas_zpracovani->aktivni->parametr.data->data.dataBool, zas_zpracovani->aktivni->parametr.data->typ);
 				break;
 			case TDNIL: printf("-> ->Klic: %s, nil, typ: %d\n", zas_zpracovani->aktivni->parametr.klic, zas_zpracovani->aktivni->parametr.data->typ);
 
@@ -122,7 +113,6 @@ int main(){
 		set_nasl(zas_zpracovani);
 	}
 	printf("**************************************\n");
-	BVSVypisStrom(&pom_tab_sym);
 	
 	Sez_zrus(seznam_instrukci);
 	
@@ -131,7 +121,7 @@ int main(){
 	BVSZrus (&uzel_aktualni_funkce->koren);
 	
 	token_uvolni(token);
-	zasobnik_free(&zas_uk, &zas_int);
+	zasobnik_free(&zasobnik);
 	fclose(soubor);
 	
 	if (chyba != ERR_OK){

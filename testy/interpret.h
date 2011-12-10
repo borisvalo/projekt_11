@@ -6,7 +6,23 @@
 #define KONEC_CHYBA 1
 #define TRUE        0
 #define FALSE       1
+
+//VYCTOVE TYPY --------------------------------------------
+
+
+
+
+
+
+
+//potrebne definice
 #define MAX_ARR     20
+#define TRUE         0
+#define FALSE        1
+#define KONEC_OK     0
+#define KONEC_CHYBA  1
+
+
 
 //---------------- struktury pro BVS funkci ------------------
 typedef struct bsfunkpol {
@@ -58,12 +74,11 @@ typedef struct bsuzel {
 
 //FUNKCE
 void BVSInit (UkTBSUzel *Kor);
-int  BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka *obsah);
+int  BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah);
 void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah);
 void BVSNahradZaPraveho(UkTBSUzel PtrReplaced, UkTBSUzel *Kor);
 void BVSVymaz (UkTBSUzel *Kor, char *K);
 void BVSZrus (UkTBSUzel *Kor);
-void BVSVypisStrom (UkTBSUzel *Kor);
 
 
 //dalsi by Paulie
@@ -75,6 +90,7 @@ void BVSFunkceInit (UkTBSFunkce *Kor);
 int BVSFunkceNajdi (UkTBSFunkce Kor, char *K, UkTBSFunkPol *obsah);
 void BVSFunkceVloz (UkTBSFunkce *Kor, char *K, UkTBSFunkPol obsah);
 void BVSFunkceZrus (UkTBSFunkce *Kor);
+
 
 
 
@@ -114,7 +130,7 @@ typedef enum nazvyInstrukci {
     IN_SORT,     // heapsort()  | op     | /   | cil 19
     IN_SUBSTR,   // substr()    |                    20
     //---------------------------------------------
-    IN_PRIRAD,   // prirazeni   | zas    | kam | co  21
+    IN_PRIRAD,   // prirazeni   | op     | /   | cil 21
     //---------------------------------------------
     IN_POP,      // POP adrr    | funkce | cil | /   22
     IN_PUSH,     // PUSH adrr   | funkce | adr | /   23
@@ -129,9 +145,9 @@ typedef enum nazvyInstrukci {
 //ukazatel na void se pozdeji pretipuje
 typedef struct {
   int typInstr;              // typ instrukce
-  UkTBSPolozka op1;                 // adresa 1
-  UkTBSPolozka op2;                 // adresa 2
-  UkTBSPolozka op3;                 // adresa 3
+  void *op1;                 // adresa 1
+  void *op2;                 // adresa 2
+  void *op3;                 // adresa 3
 } TInstr, *UkTInstr;
 
 //struktura pro polozky seznamu
@@ -208,7 +224,7 @@ int zmen_data_par(UkTSezPar L, void *ret, int typ);
 int najdi_prvek_lok(UkTSezPar L, char *K);
 void kopiruj_parametry(UkTSezPar zas_zpracovani, UkTSezPar zasobnik);
 void kopiruj_promenne(UkTSezPar zas_zpracovani, UkTBSUzel *UkKor);
-int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka *ukazatel);
+int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka ukazatel);
 void vymaz_promenne(UkTSezPar L);
 
 
@@ -218,43 +234,3 @@ void zas_adres_in(UkTZasAdr L);
 void zas_adres_zrus(UkTZasAdr L);
 int Push_adr(UkTZasAdr L, UkTInstr adresa);
 void Pop_adr(UkTZasAdr L, UkTInstr adresa);
-
-
-
-// --------------------------- z zasobnik.h --------------
-
-
-
-#define REALLOC_SOUSTO 4 // TODO: zmenit na vetsi pred odevzdanim
-                         // ZMENIT ZPATKY NA 2 - KVULI TESTOVANI ALOKACE
-
-/*typedef struct stTPrvek {
-	int typ;   // typ tokenu
-	//UkTBSPolozka uk_na_prvek_ts;
-	struct bsdata *uk_na_prvek_ts;
-} TPrvek;*/
-
-typedef struct stTZasobnikUk {
-    int top; //vrchol zasobniku
-    int velikost; //velikost alokovaneho prostoru
-    UkTBSPolozka * array; //data zasobniku
-} TZasobnikUk;
-
-typedef struct stTZasobnikInt {
-    int top; //vrchol zasobniku
-    int velikost; //velikost alokovaneho prostoru
-    int * array; //data zasobniku
-} TZasobnikInt;
-
-
-int zasobnik_init (TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
-void zasobnik_free(TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
-int zasobnik_pop (TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
-int zasobnik_push (TZasobnikUk *zas_uk, int hodnota, TZasobnikInt *zas_int, UkTBSPolozka ukazatel_do_ts);
-
-//int zasobnik_pristup (TZasobnik *zas, TPrvek * hodn, int posun);
-//int zasobnik_top (TZasobnik *zas, TPrvek * hodn);    // NEPOUZIVA SE
-void zasobnik_vynuluj (TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
-
-int zasobnik_pristup_uk (TZasobnikUk *zas, UkTBSPolozka * hodn, int posun);
-int zasobnik_pristup_int (TZasobnikInt *zas, int * hodn, int posun);

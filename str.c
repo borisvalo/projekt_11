@@ -39,15 +39,49 @@ void Ret_realokuj(TRetezec *ret, int delka) {
 void Ret_konkatenace(TRetezec ret1, TRetezec ret2, TRetezec *ret3) {
     //ziskame soucet delky operatoru
     int delkaop;
+    //delkaop = strlen(ret1) + strlen(ret2);
+    
+    printf("Delka ret1: %d, ret2: %d\n", (int) strlen(ret1), (int) strlen(ret2));
+    printf("ret1: _%s_, ret2: _%s_\n", ret1, ret2);
+    
+    /*
+    int j, k;
+     char pom_slovo1[strlen(ret1)-2];
+     char pom_slovo2[strlen(ret2)-2];
+     
+    for(j = 0;j<strlen(ret1)-2;j++) {
+		pom_slovo1[j] = ret1[j+1];
+	}
+	pom_slovo1[j] = '\0';
+	 
+	 for(k = 0;k<strlen(ret2)-2;k++) {
+		pom_slovo2[k] = ret2[k+1];
+	}
+	pom_slovo2[k] = '\0';
+     
+     */
+    
+    //printf("Zmenene ret1: _%s_, ret2: _%s_\n", pom_slovo1,  pom_slovo2);
+    //printf("Delka pom_slovo1: %d, pom_slovo2: %d\n", (int) strlen(pom_slovo1), (int) strlen(pom_slovo2));
+    
     delkaop = strlen(ret1) + strlen(ret2);
+    printf("Delka konk retezce: %d\n", delkaop);
+    
+    //printf("ret1: %s\n", ret1);
     
     //alokace pro vysledny retezec
-    Ret_alokuj(ret3, (delkaop + 1));
+    Ret_alokuj(ret3, (delkaop + 3));
     if (ret3 == NULL) {
         printf("chyba mallocu\n");
         return;
     }
+    *ret3[0] = '\0';
+    
+    printf("ret3: %s\n", *ret3);
     
     //samotna konkatenace
-    strcpy((*ret3), strcat(ret1, ret2));
+    strcat(*ret3, ret1);
+    strcat(*ret3, ret2);
+    //strcpy((*ret3), strcat(ret1, ret2));
+    //strcpy((*ret3), strcat(pom_slovo1, pom_slovo2));
 }

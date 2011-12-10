@@ -64,8 +64,8 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 if (symbol == '"') {
                     stav = Literal;
                     Ret_alokuj(&(strukt->data), MIN_ARR);
-                    strukt->data[citac] = symbol;
-                    citac++; //bude se cist dalsi znak
+                    //strukt->data[citac] = symbol;
+                    //citac++; //bude se cist dalsi znak
                 }
                 else if (symbol == ',') {
                     strukt->typ = CARKA;
@@ -303,12 +303,12 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                     citac++; //bude se cist dalsi znak
                 }
                 else if (symbol == '"') {
-                    if ((citac + 3) > strukt->delka) { //realokace
+                    if ((citac + 2) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }
-                    strukt->data[citac] = symbol;
-                    strukt->data[(citac + 1)] = '\0'; //ukonceni retezce
+                    //strukt->data[citac] = symbol;
+                    strukt->data[(citac)] = '\0'; //ukonceni retezce
                     strukt->typ = RETEZEC;
                     return KONEC_OK;
                 }

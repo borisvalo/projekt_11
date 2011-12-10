@@ -1,28 +1,37 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "parser.h"
 #include "bvs.h"
 #include "zasobnik.h"
-
+#include "interpret.h"
 
 /*
 * Inicializace zasobniku
 * @return = chybovy kod
 */
-int zasobnik_init (TZasobnik *zas){
-    if ((zas->array = malloc(REALLOC_SOUSTO*sizeof(TPrvek)))==NULL){    // k malloc musi byt free !!!
+int zasobnik_init (TZasobnikUk *zas_uk, TZasobnikInt *zas_int){
+    if ((zas_uk->array = malloc(REALLOC_SOUSTO*sizeof(UkTBSPolozka)))==NULL){    // k malloc musi byt free !!!
         return ERR_INTERNI;
     }
-    zas->velikost = REALLOC_SOUSTO;
-    zas->top = -1;
+    zas_uk->velikost = REALLOC_SOUSTO;
+    zas_uk->top = -1;
+    
+    if ((zas_int->array = malloc(REALLOC_SOUSTO*sizeof(int)))==NULL){    // k malloc musi byt free !!!
+        return ERR_INTERNI;
+    }
+    zas_int->velikost = REALLOC_SOUSTO;
+    zas_int->top = -1;
+    
     return ERR_OK;
 }
 
 /*
 * Vynulovani zasobniku
 */
-void zasobnik_vynuluj (TZasobnik *zas){
-    zas->top = -1;
+void zasobnik_vynuluj (TZasobnikUk *zas_uk, TZasobnikInt *zas_int){
+    zas_uk->top = -1;
+    zas_int->top = -1;
 }
 
 
@@ -32,8 +41,9 @@ void zasobnik_vynuluj (TZasobnik *zas){
 * Uvolni dynamicky alokovanou pamet
 * @return = chybovy kod
 */
-void zasobnik_free(TZasobnik *zas){
-	free(zas -> array);
+void zasobnik_free(TZasobnikUk *zas_uk, TZasobnikInt *zas_int){
+	free(zas_uk -> array);
+	free(zas_int -> array);
 }
 
 
@@ -41,9 +51,10 @@ void zasobnik_free(TZasobnik *zas){
 * Vyjme hodnotu z vrcholu zasobniku a (!)nevrati
 * @return = chybovy kod
 */
-int zasobnik_pop (TZasobnik *zas){
-    if(zas->top>=0){
-        zas->top--;
+int zasobnik_pop (TZasobnikUk *zas_uk, TZasobnikInt *zas_int){
+    if(zas_uk->top>=0){
+        zas_uk->top--;
+        zas_int->top--;
     }
     return ERR_OK;
 }
@@ -52,16 +63,27 @@ int zasobnik_pop (TZasobnik *zas){
 * Vlozi hodnotu na vrcholu zasobniku a posune ho
 * @return = chybovy kod
 */
-int zasobnik_push (TZasobnik *zas, TPrvek prvek){
-    if(zas->top == zas->velikost-1) {
-        if((zas->array = realloc(zas->array, ((zas->velikost + REALLOC_SOUSTO) * sizeof(TPrvek)))) == NULL) {       // k malloc musi byt free !!!
-            zasobnik_free(zas);
+int zasobnik_push (TZasobnikUk *zas_uk, int hodnota, TZasobnikInt *zas_int, UkTBSPolozka ukazatel_do_ts){
+    if(zas_uk->top == zas_uk->velikost-1) {
+        if((zas_uk->array = realloc(zas_uk->array, ((zas_uk->velikost + REALLOC_SOUSTO) * sizeof(UkTBSPolozka)))) == NULL) {       // k malloc musi byt free !!!
+            zasobnik_free(zas_uk, zas_int);
             return ERR_INTERNI;
         }
-        zas->velikost += REALLOC_SOUSTO;
+        zas_uk->velikost += REALLOC_SOUSTO;
     }
-    zas->top++;
-    zas->array[zas->top] = prvek;
+    zas_uk->top++;
+    zas_uk->array[zas_uk->top] = ukazatel_do_ts;
+    
+    if(zas_int->top == zas_int->velikost-1) {
+        if((zas_int->array = realloc(zas_int->array, ((zas_int->velikost + REALLOC_SOUSTO) * sizeof(int)))) == NULL) {       // k malloc musi byt free !!!
+            zasobnik_free(zas_uk, zas_int);
+            return ERR_INTERNI;
+        }
+        zas_int->velikost += REALLOC_SOUSTO;
+    }
+    zas_int->top++;
+    zas_int->array[zas_int->top] = hodnota;
+    
     return ERR_OK;
 }
 
@@ -72,11 +94,26 @@ int zasobnik_push (TZasobnik *zas, TPrvek prvek){
 * @return = chybovy kod
 * *hodn = vraci hodnotu na vrcholu zasobniku
 */
-int zasobnik_pristup (TZasobnik *zas, TPrvek * hodn, int posun){
-    if (zas->top < 0-posun){
+int zasobnik_pristup_int (TZasobnikInt *zas_int, int * hodn, int posun){
+    if (zas_int->top <= 0-posun){
         return ERR_INTERNI;
     }
-    *hodn = zas->array[zas->top-posun];
+    *hodn = zas_int->array[zas_int->top-posun];
+    //printf("zasobnik-pristup: %d", (int)hodn);
+    return ERR_OK;
+}
+/*
+* Vrati hodnotu na vrcholu zasobniku (+ s posunem)
+* == zobecneni ZasobnikTop
+* @return = chybovy kod
+* *hodn = vraci hodnotu na vrcholu zasobniku
+*/
+int zasobnik_pristup_uk (TZasobnikUk *zas_uk, UkTBSPolozka * hodn, int posun){
+    if (zas_uk->top <= 0-posun){
+        return ERR_INTERNI;
+    }
+    *hodn = zas_uk->array[zas_uk->top-posun];
+    //printf("zasobnik-pristup: %d", (int)hodn);
     return ERR_OK;
 }
 
@@ -86,8 +123,9 @@ int zasobnik_pristup (TZasobnik *zas, TPrvek * hodn, int posun){
 * @return = chybovy kod
 * *hodn = vraci hodnotu na vrcholu zasobniku
 */
+/*
 int zasobnik_top (TZasobnik *zas, TPrvek * hodn){
     return zasobnik_pristup(zas, hodn,0);
-}
+}*/
 
 

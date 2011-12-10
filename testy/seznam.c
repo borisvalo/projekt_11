@@ -10,7 +10,6 @@
 
 extern UkTToken token;
 char retezec[] = "function";
-extern UkTPlzkaSez adresa_konce;
 
 // inicializace seznamu
 void Sez_init(UkTSezInstr L) {
@@ -156,34 +155,31 @@ void *hodnota_aktivniho(UkTSezPar L) {
   
 	return &(L->aktivni->parametr);
 }
-/*
+
 int zmen_data_par(UkTSezPar L, void *ret, int typ){
 	
-	printf("hodnota ve funkci zmen_data_parametru: %f \n", (double)ret);
-	if(typ == TDRETEZEC){
-		free(L->posledni->parametr.data->data.dataRet);
-	}
-	
 	switch(typ){
-		case TDRETEZEC: if ((L->posledni->parametr.data->data.dataRet = malloc(strlen(ret)*sizeof(char)))==NULL){
-							return ERR_INTERNI;
-						}
-						strcpy(	L->posledni->parametr.data->data.dataRet, ret );
-						L->posledni->parametr.data->typ = TDRETEZEC;
-						break;	
-		case TDCISLO: 	L->posledni->parametr.data->typ = TDCISLO;
-						L->posledni->parametr.data->data.dataCis = atof(ret);
-						break;
-		case TDBOOL: 	L->posledni->parametr.data->typ = TDBOOL;
-						L->posledni->parametr.data->data.dataBool = atoi(ret);
-						break;
-		case TDNIL:	L->posledni->parametr.data->typ = TDNIL;
-					break;
+		case RETEZEC: if ((L->posledni->parametr.data->data.dataRet = malloc(strlen(ret)*sizeof(char)))==NULL){
+										return ERR_INTERNI;
+									}
+									strcpy(	L->posledni->parametr.data->data.dataRet, ret );
+									L->posledni->parametr.data->typ = TDRETEZEC;
+									break;
+		case INTKONEC:
+    case DESKONEC:	
+    case EXPKONEC: 	L->posledni->parametr.data->typ = TDCISLO;
+    								L->posledni->parametr.data->data.dataCis = atof(ret);
+    								break;
+    case TNTRUE: 	L->posledni->parametr.data->typ = TDBOOL;
+    							L->posledni->parametr.data->data.dataBool = TRUE;
+    							break;
+    case TNFALSE:	L->posledni->parametr.data->typ = TDBOOL;
+    							L->posledni->parametr.data->data.dataBool = FALSE;
+    							break;
 	}
 	
 	return ERR_OK;
 }
-* */
 int najdi_prvek_lok(UkTSezPar L, char *K){
 		if (L==NULL){
 			printf("nealokovan zasobnik\n");
@@ -228,30 +224,27 @@ void kopiruj_promenne(UkTSezPar zas_zpracovani, UkTBSUzel *UkKor) {
 	if ((*UkKor)->puk != NULL) { //i vpravo
 		kopiruj_promenne(zas_zpracovani, &((*UkKor)->puk));
 	}
-	printf("klic kopirovane promenne je: %s \n", (*UkKor)->klic);
+	
 	insert_last(zas_zpracovani, (*UkKor)->klic); // zkopirovani klice
-	printf("typ kopirovane promenne je: %d \n", (*UkKor)->data.typ);
-	zas_zpracovani->posledni->parametr.data->typ = (*UkKor)->data.typ;
-
+	
 	switch((*UkKor)->data.typ){
-		case TDRETEZEC: if ((zas_zpracovani->posledni->parametr.data->data.dataRet = malloc((strlen((*UkKor)->data.data.dataRet)+1)*sizeof(char)))==NULL){
-							return;
-						}
-						strcpy(	zas_zpracovani->posledni->parametr.data->data.dataRet, (*UkKor)->data.data.dataRet );
-						//L->posledni->parametr.data->typ = TDRETEZEC;
-						break;	
-		case TDCISLO: 	//L->posledni->parametr.data->typ = TDCISLO;
-						zas_zpracovani->posledni->parametr.data->data.dataCis = (*UkKor)->data.data.dataCis;
-						break;
-		case TDBOOL: 	//L->posledni->parametr.data->typ = TDBOOL;
-						zas_zpracovani->posledni->parametr.data->data.dataBool = (*UkKor)->data.data.dataBool;
-						break;
+		case TDCISLO:
+			zmen_data_par(zas_zpracovani, (double*)&(*UkKor)->data.data.dataCis, (*UkKor)->data.typ);
+			break;
+		case TDRETEZEC:
+			zmen_data_par(zas_zpracovani, (char*)(*UkKor)->data.data.dataRet, (*UkKor)->data.typ);
+			break;
+		case TDBOOL:
+			zmen_data_par(zas_zpracovani, (int*)&(*UkKor)->data.data.dataBool, (*UkKor)->data.typ);
+			break;
+		case TDNIL:
+			zmen_data_par(zas_zpracovani, NULL, (*UkKor)->data.typ);
+			break;
 	}
 	
-	printf("klic promenne na zasobniku je: %s  a jeho typ je %d\n", zas_zpracovani->posledni->parametr.klic, zas_zpracovani->posledni->parametr.data->typ);
 }
 
-int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka *ukazatel){
+int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka ukazatel){
 		UkTPlzkaSezPar PomUk = NULL;
 		
 		if (L == NULL){
@@ -260,7 +253,9 @@ int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka *ukazatel){
 		}
 		
 		set_first(L);
-		
+		if(L->aktivni == NULL){
+		printf("zasobnik neni aktivni\n");
+	}
 		while(L->aktivni != NULL){
 			
 			if(strcmp(L->aktivni->parametr.klic, retezec) == 0){
@@ -273,41 +268,25 @@ int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka *ukazatel){
 		L->aktivni = PomUk;
 		
 		while(L->aktivni != NULL){
-			printf("klic aktivniho je: %s\n", L->aktivni->parametr.klic);
-			printf("klic hledany je: %s\n", K);
 			if(strcmp(L->aktivni->parametr.klic, K) == 0){
-				*ukazatel = L->aktivni->parametr.data;
-				//printf("ukazatel: %d\n", (int)ukazatel);
-					
-					
-					//ukazatel->typ = L->aktivni->parametr.data.typ;
-					//ukazatel->data
-					//printf("0------------------ adresa vzhledana primo ve funkci najdi_prom je: %d\n", ukazatel);
-					//sprintf("0------------------ data na danem miste: %f a typ %d\n", ukazatel->data.dataCis, ukazatel->typ);
-					/*
-					printf("dosli sme na typ, kterej potrebujeme zjistit> %d", ukazatel->typ);
-					switch(ukazatel->typ){
+					ukazatel->typ = L->aktivni->parametr.data->typ;
+					switch(L->aktivni->parametr.data->typ){
 						case TDCISLO:
 							ukazatel->data.dataCis = L->aktivni->parametr.data->data.dataCis;
-							printf("promenna nalezena a zkopirovana je cislo a jeho hodnota je: %f\n", ukazatel->data.dataCis);
 							break;
 						case TDRETEZEC:
 							if ((ukazatel->data.dataRet = malloc(strlen(L->aktivni->parametr.data->data.dataRet)*sizeof(char)))==NULL){
 								return ERR_INTERNI;
 							}
 							strcpy(ukazatel->data.dataRet, L->aktivni->parametr.data->data.dataRet);
-							
-							printf("promenna nalezena a zkopirovana je retezec a jeho hodnota je: %s\n", ukazatel->data.dataRet);
 							break;
 						case TDBOOL:
-							ukazatel->data.dataBool = L->aktivni->parametr.data->data.dataBool;
-							printf("promenna nalezena a zkopirovana je boolean a jeho hodnota je: %d\n", ukazatel->data.dataBool);
+							ukazatel->data.dataCis = L->aktivni->parametr.data->data.dataBool;
 							break;
 						case TDNIL:
 							break;
 						}
-					printf("dostal sem se za switch\n");
-					*/
+					
 					return TRUE;
 			}
 			
@@ -391,4 +370,18 @@ void Pop_adr(UkTZasAdr L, UkTInstr adresa){
 	L->prvni = PomUk->ukdalsi;
 	free(PomUk);
 		
+}
+
+int main() {
+	UkTSezPar L;
+	L=malloc(sizeof(TSezPar));
+	Sez_init_funkce(L);
+	
+	insert_last(L, "prvni");
+	insert_last(L, "druhy");
+	insert_last(L, "treti");
+	
+	set_first(L);
+	printf("klic je %s\n", L->aktivni->parametr.klic);
+	Sez_zrus_funkce(L);
 }

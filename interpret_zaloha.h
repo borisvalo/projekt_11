@@ -228,33 +228,26 @@ void Pop_adr(UkTZasAdr L, UkTInstr adresa);
 #define REALLOC_SOUSTO 4 // TODO: zmenit na vetsi pred odevzdanim
                          // ZMENIT ZPATKY NA 2 - KVULI TESTOVANI ALOKACE
 
-/*typedef struct stTPrvek {
+typedef struct stTPrvek {
 	int typ;   // typ tokenu
 	//UkTBSPolozka uk_na_prvek_ts;
 	struct bsdata *uk_na_prvek_ts;
-} TPrvek;*/
+} TPrvek;
 
-typedef struct stTZasobnikUk {
+typedef struct stTZasobnik {
     int top; //vrchol zasobniku
     int velikost; //velikost alokovaneho prostoru
-    UkTBSPolozka * array; //data zasobniku
-} TZasobnikUk;
-
-typedef struct stTZasobnikInt {
-    int top; //vrchol zasobniku
-    int velikost; //velikost alokovaneho prostoru
-    int * array; //data zasobniku
-} TZasobnikInt;
+    struct stTPrvek * array; //data zasobniku
+} TZasobnik;
 
 
-int zasobnik_init (TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
-void zasobnik_free(TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
-int zasobnik_pop (TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
-int zasobnik_push (TZasobnikUk *zas_uk, int hodnota, TZasobnikInt *zas_int, UkTBSPolozka ukazatel_do_ts);
-
+int zasobnik_init (TZasobnik *zas);
+void zasobnik_free(TZasobnik *zas);
+int zasobnik_pop (TZasobnik *zas);
+int zasobnik_push (TZasobnik *zas, TPrvek prvek);
 //int zasobnik_pristup (TZasobnik *zas, TPrvek * hodn, int posun);
-//int zasobnik_top (TZasobnik *zas, TPrvek * hodn);    // NEPOUZIVA SE
-void zasobnik_vynuluj (TZasobnikUk *zas_uk, TZasobnikInt *zas_int);
+int zasobnik_top (TZasobnik *zas, TPrvek * hodn);
+void zasobnik_vynuluj (TZasobnik *zas);
 
-int zasobnik_pristup_uk (TZasobnikUk *zas, UkTBSPolozka * hodn, int posun);
-int zasobnik_pristup_int (TZasobnikInt *zas, int * hodn, int posun);
+int zasobnik_pristup_uk (TZasobnik *zas, UkTBSPolozka * hodn, int posun);
+int zasobnik_pristup_int (TZasobnik *zas, int * hodn, int posun);

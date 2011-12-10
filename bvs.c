@@ -15,11 +15,11 @@ void BVSInit (UkTBSUzel *Kor) {
     (*Kor) = NULL;
 }	
 
-int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah)	{
+int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka *obsah)	{
 	if (Kor == NULL) { //neni v cem hledat
+		printf("bvs najdi nenaslo - neni obsah\n");
         return FALSE;
-    }
-    else {
+    }else {
         if (strcmp(Kor->klic,K) != 0) {
             if (strcmp(Kor->klic, K) > 0) { //doleva
                 return BVSNajdi(Kor->luk, K, obsah);
@@ -28,13 +28,15 @@ int BVSNajdi (UkTBSUzel Kor, char *K, UkTBSPolozka obsah)	{
                 return BVSNajdi(Kor->puk, K, obsah);
             }
         }
-        else {
-        		if(obsah != NULL){
-            	obsah = &(Kor->data); //vratime ukazatel na strukturu dat
-            }
+        else if (strcmp(Kor->klic,K) == 0){
+        		//if(obsah != NULL){
+            	*obsah = &(Kor->data); //vratime ukazatel na strukturu dat
+            	printf("tohle bzlo v korenu nalezeneho ve striome %d \n",Kor->data.typ);
+            //}
             return TRUE;
         }
     }	
+    return FALSE;
 } 
 
 void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {	
@@ -57,7 +59,8 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         	ptr->data.typ = TDNIL;
         }
         if (ptr->data.typ == TDRETEZEC) {
-        				Ret_alokuj(&(ptr->data.data.dataRet), strlen(obsah->data.dataRet));
+        				Ret_alokuj(&(ptr->data.data.dataRet), strlen(obsah->data.dataRet)+1);
+        				strcpy(ptr->data.data.dataRet, obsah->data.dataRet);
         }
         else {
         				if(obsah != NULL){
@@ -75,8 +78,24 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
             BVSVloz(&((*Kor)->puk), K, obsah);
         }
         else { //obnovime data aktualniho uzlu
-            (*Kor)->data.typ = obsah->typ;
-            (*Kor)->data.data = obsah->data;
+        // opravit upravu dat
+			if(obsah->typ == TDRETEZEC){
+				if((*Kor)->data.typ == TDRETEZEC){
+					free((*Kor)->data.data.dataRet);
+				}
+				
+				(*Kor)->data.typ = obsah->typ;
+				(*Kor)->data.data.dataRet = malloc((strlen(obsah->data.dataRet)+1)*sizeof(char));
+				strcpy((*Kor)->data.data.dataRet, obsah->data.dataRet);
+			
+			}else{
+				if((*Kor)->data.typ == TDRETEZEC){
+					free((*Kor)->data.data.dataRet);
+				}
+				
+				(*Kor)->data.typ = obsah->typ;
+				(*Kor)->data.data = obsah->data;
+			}
         }
     }
 }
@@ -229,6 +248,34 @@ void BVSFunkceZrus (UkTBSFunkce *Kor) {
         free(*Kor);
         (*Kor) = NULL;
     }
+}
+
+void BVSVypisStrom (UkTBSUzel *Kor) {	
+    if ((*Kor) != NULL) {
+			switch((*Kor)->data.typ){
+				case TDRETEZEC:
+					printf("hodnota: %s klic: %s \n", (*Kor)->data.data.dataRet, (*Kor)->klic);
+					break;
+				case TDCISLO:
+					printf("hodnota: %f klic: %s \n", (*Kor)->data.data.dataCis, (*Kor)->klic);
+					break;
+				case TDBOOL:
+					printf("hodnota: %d klic: %s \n", (*Kor)->data.data.dataBool, (*Kor)->klic);
+					break;
+				case TDNIL: 
+					printf("hodnota: nil klic: %s \n", (*Kor)->klic);
+					break;
+				default:
+					printf("je to na dve veci klic: %s \n", (*Kor)->klic);
+			}
+        if ((*Kor)->luk != NULL) {
+            BVSVypisStrom(&(*Kor)->luk);
+        }
+        if ((*Kor)->puk != NULL) {
+            BVSVypisStrom(&(*Kor)->puk);
+        }
+    }else
+    printf("vzpis : koren je null\n");
 }
 
 
