@@ -1,3 +1,17 @@
+/*
+ *   Nazev projektu: Implementace interpretu imperativniho jazyka IFJ11
+ * 
+ *   Autori:   	Boris Valo, xvalob00
+ * 				Pavel Slaby, xslaby00
+ * 				Ondrej Vohanka, xvohan00
+ * 				Matej Stepanek, xstepa43
+ * 				Martina Stodolova, xstodo04 
+ * 
+ *   Datum odevzdani: 11.12.2011
+ */
+
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,6 +23,7 @@
 #include "bvs.h"
 #include "scaner.h"
 #include "parser.h"
+#include "vfce.h"
 //#include "ial.c"
 
 extern UkTToken token;
@@ -51,11 +66,12 @@ int Interpret(UkTSezInstr list) {
         switch (ukinstr->typInstr) { //automat
             //cteni
             case IN_READ:
+                read((UkTBSPolozka)ukinstr->op1, &(ukinstr->op3->data));
                 break;
                 
             //vypis
             case IN_WRITE:
-                //write(ukinstr->op1);
+                write((UkTBSPolozka)ukinstr->op1);
                 break;
                 
             //soucet
@@ -313,7 +329,7 @@ int Interpret(UkTSezInstr list) {
             case IN_KONK:
 				printf("instrukce konkatenace\n\n\n");
 				
-				//printf("op3 adresa v konk: %d\n", (int)ukinstr->op3);
+//				printf("op3 adresa v konk: %d\n", (int)ukinstr->op3);
 				printf("retkonk %s , %s\n", ((UkTBSPolozka)ukinstr->op1)->data.dataRet, ((UkTBSPolozka)ukinstr->op2)->data.dataRet);
 				BVSVypisStrom(&pom_tab_sym);
                 if (((UkTBSPolozka)ukinstr->op1)->typ == TDRETEZEC && ((UkTBSPolozka)ukinstr->op2)->typ == TDRETEZEC) {
@@ -328,7 +344,7 @@ int Interpret(UkTSezInstr list) {
                 break;
                 
             case IN_TYPE:
-                //zavolani funkce type()
+                strcpy(((UkTBSPolozka)ukinstr->op3)->data.dataRet, type((UkTBSPolozka)ukinstr->op1));
                 break;
                 
             case IN_FIND:
@@ -341,9 +357,9 @@ int Interpret(UkTSezInstr list) {
                 break;
                 
             case IN_SUBSTR:
-                //zavolani funkce substr()
-                // osetrit oprandy na NULL, pokud bude jakykoliv z nich NULL, vraci se rovnou NULL
-                // free(pom_pole);
+                //substr(zakladni_retezec, vychozi_retezec, prvni_cislo, druhe_cislo);
+                
+                //osetrit oprandy na NULL, pokud bude jakykoliv z nich NULL, vraci se rovnou NULL
                 break;
                 
             //operace prirazeni
@@ -456,7 +472,7 @@ int Interpret(UkTSezInstr list) {
 					}else{
 						printf("promenna nebyla do haje nalezena!!!!!!!!!!!!!!!\n");
 					}
-					//printf("op3: %d\n", (int)ukinstr->op3);
+//					printf("op3: %d\n", (int)ukinstr->op3);
 				break;
             //konec interpretu
             case IN_KONEC:
@@ -473,3 +489,4 @@ int Interpret(UkTSezInstr list) {
     
     return KONEC_OK;
 }
+

@@ -1,4 +1,15 @@
-// scaner.c
+/*
+ *   Nazev projektu: Implementace interpretu imperativniho jazyka IFJ11
+ * 
+ *   Autori:   	Boris Valo, xvalob00
+ * 				Pavel Slaby, xslaby00
+ * 				Ondrej Vohanka, xvohan00
+ * 				Matej Stepanek, xstepa43
+ * 				Martina Stodolova, xstodo04 
+ * 
+ *   Datum odevzdani: 11.12.2011
+ */
+
 
 //potrebne knihovny:
 #include <stdio.h>
@@ -6,7 +17,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "str.h"
+#include "string.h"
 #include "obecne.h"
 #include "scaner.h"
 #include "parser.h"
@@ -24,13 +35,41 @@ int token_alokuj(UkTToken *strukt) {
 
 //funkce pro uvolneni tokenu
 void token_uvolni(UkTToken strukt) {
-    if (strukt->typ == IDKONEC ||
-        strukt->typ == RETEZEC ||
-        strukt->typ == INTKONEC ||
-        strukt->typ == EXPKONEC ||
-        strukt->typ == DESKONEC
-        ) {
-        Ret_uvolni(strukt->data);
+    switch (strukt->typ){
+    	case IDKONEC:
+			case RETEZEC:
+      case INTKONEC:
+      case EXPKONEC:
+      case DESKONEC:
+      case TNDO:
+			case TNELSE:
+			case TNEND: 
+			case TNFALSE:
+			case TNFUNCTION:
+			case TNIF:
+			case TNLOCAL:
+			case TNNIL:
+			case TNREAD: 
+			case TNRETURN: 
+			case TNTHEN:
+			case TNTRUE:
+			case TNWHILE:
+			case TNWRITE:
+			case RSAND:
+			case RSBREAK:
+			case RSELSEIF: 
+			case RSFOR:
+			case RSIN:
+			case RSNOT:
+			case RSOR:
+			case RSREPEAT: 
+			case RSUNTIL:
+			case RSSORT:
+			case RSFIND:
+			case RSTYPE:
+			case RSSUBSTR:
+			case RSMAIN:
+				Ret_uvolni(strukt->data);
     }
    
     free(strukt);
@@ -53,6 +92,7 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
     int stav = INIT; //prvni stav je automaticky INIT
     int symbol;      //nacitany znak
     int citac = 0;   //pocita kolikaty znak jsme nacetli
+    int cislo;       //cislo v \ddd
     
     while (1) {
         symbol = getc(f); //precteni znaku ze souboru
@@ -295,25 +335,18 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
             case Literal:
                 if (symbol == '\\') {
                     stav = Escape;
-                    if ((citac + 2) > strukt->delka) { //realokace
-                        strukt->delka = strukt->delka * NAS_DEL;
-                        Ret_realokuj(&(strukt->data), strukt->delka);
-                    }
-                    strukt->data[citac] = symbol;
-                    citac++; //bude se cist dalsi znak
                 }
                 else if (symbol == '"') {
-                    if ((citac + 2) > strukt->delka) { //realokace
+                    if ((citac + 1) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }
-                    //strukt->data[citac] = symbol;
-                    strukt->data[(citac)] = '\0'; //ukonceni retezce
+                    strukt->data[citac] = '\0'; //ukonceni retezce
                     strukt->typ = RETEZEC;
                     return KONEC_OK;
                 }
                 else {
-                    if ((citac + 2) > strukt->delka) { //realokace
+                    if ((citac + 1) > strukt->delka) { //realokace
                         strukt->delka = strukt->delka * NAS_DEL;
                         Ret_realokuj(&(strukt->data), strukt->delka);
                     }
@@ -323,17 +356,60 @@ int ziskej_dalsi_token(FILE *f, UkTToken strukt) {
                 break;
                 
             //...........................................
-            //osetreni escape sekvence \"
-            //aby neskoncil strukt->data predcasne
+            //osetreni escape sekvence
             case Escape:
-                if ((citac + 1) > strukt->delka) { //realokace
-                    strukt->delka = strukt->delka * NAS_DEL;
-                    Ret_realokuj(&(strukt->data), strukt->delka);
+                if (symbol == 't' ||
+                    symbol == 'n' ||
+                    symbol == '\\' ||
+                    symbol == '"') {
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
+                    //osetreni escape sekvenci
+                    if (symbol == 't') { //tabulator
+                        strukt->data[citac] = '\t';
+                    }
+                    else if (symbol == 'n') { //novy radek
+                        strukt->data[citac] = '\n';
+                    }
+                    else { //v ostatnich pripadech staci nakopirovat znak za '\'
+                        strukt->data[citac] = symbol;
+                    }
+                    citac++; //bude se cist dalsi znak
+                    stav = Literal;
                 }
-                strukt->data[citac] = symbol;
-                citac++; //bude se cist dalsi znak
-                stav = Literal;
-                //osetrit konec souboru?
+                else if (isdigit(symbol)) {
+                    //escape sekvence \ddd - precteme 3 cisla
+                    cislo = (symbol - '0') * 100; //prvni jsou stovky
+                    if (!isdigit(symbol = getc(f))) {
+                        strukt->typ = CHYBA;
+                        return KONEC_CHYBA;
+                    }
+                    cislo += (symbol - '0') * 10; //druhe desitky
+                    if (!isdigit(symbol = getc(f))) {
+                        strukt->typ = CHYBA;
+                        return KONEC_CHYBA;
+                    }
+                    cislo += (symbol - '0'); //treti jednotky
+                    if (cislo > 255) { //cislo je moc velke -> chyba
+                        strukt->typ = CHYBA;
+                        return KONEC_CHYBA;
+                    }
+                    
+                    if ((citac + 1) > strukt->delka) { //realokace
+                        strukt->delka = strukt->delka * NAS_DEL;
+                        Ret_realokuj(&(strukt->data), strukt->delka);
+                    }
+                    strukt->data[citac] = (char) cislo;
+                    citac++; //bude se cist dalsi znak
+                    stav = Literal;
+                }
+                else {
+                    strukt->typ = CHYBA;
+                    return KONEC_CHYBA;
+                }
+                
                 break;
                 
             //...........................................

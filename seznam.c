@@ -100,6 +100,11 @@ void Sez_zrus_funkce(UkTSezPar L) {
 	UkTPlzkaSezPar PomUk;
 	while (L->prvni != NULL) {
 		PomUk = L->prvni->ukdalsi;
+		if (L->prvni->parametr.data->typ == TDRETEZEC){
+			free(L->prvni->parametr.data->data.dataRet);
+		}
+		free(L->prvni->parametr.data);
+		free(L->prvni->parametr.klic);
 		free(L->prvni);
 		L->prvni = PomUk;
 	}

@@ -47,7 +47,7 @@ typedef enum {
     TNDO, TNELSE, TNEND, TNFALSE, TNFUNCTION, TNIF, TNLOCAL,
     TNNIL, TNREAD, TNRETURN, TNTHEN, TNTRUE, TNWHILE, TNWRITE,
     
-    REZSL, //rezervovana slova
+    //rezervovana slova
     RSAND, RSBREAK, RSELSEIF, RSFOR, RSIN, RSNOT, RSOR,
     RSREPEAT, RSUNTIL, RSSORT, RSFIND, RSTYPE, RSSUBSTR,RSMAIN,
 } TOKENY;
@@ -57,7 +57,6 @@ typedef struct stTToken {
     int   typ;     //typ tokenu
     char *data;    //data tokenu
     int   delka;   //delka retezce
-    int   radek;   //radek v souboru
 } TToken, *UkTToken;
 
 // FUNKCE:

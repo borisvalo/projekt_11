@@ -79,23 +79,23 @@ void BVSVloz (UkTBSUzel* Kor, char *K, UkTBSPolozka obsah) {
         }
         else { //obnovime data aktualniho uzlu
         // opravit upravu dat
-			if(obsah->typ == TDRETEZEC){
-				if((*Kor)->data.typ == TDRETEZEC){
-					free((*Kor)->data.data.dataRet);
-				}
+					if(obsah->typ == TDRETEZEC){
+						if((*Kor)->data.typ == TDRETEZEC){
+							free((*Kor)->data.data.dataRet);
+						}
 				
-				(*Kor)->data.typ = obsah->typ;
-				(*Kor)->data.data.dataRet = malloc((strlen(obsah->data.dataRet)+1)*sizeof(char));
-				strcpy((*Kor)->data.data.dataRet, obsah->data.dataRet);
+						(*Kor)->data.typ = obsah->typ;
+						(*Kor)->data.data.dataRet = malloc((strlen(obsah->data.dataRet)+1)*sizeof(char));
+						strcpy((*Kor)->data.data.dataRet, obsah->data.dataRet);
 			
-			}else{
-				if((*Kor)->data.typ == TDRETEZEC){
-					free((*Kor)->data.data.dataRet);
-				}
+					}else{
+						if((*Kor)->data.typ == TDRETEZEC){
+							free((*Kor)->data.data.dataRet);
+						}
 				
-				(*Kor)->data.typ = obsah->typ;
-				(*Kor)->data.data = obsah->data;
-			}
+						(*Kor)->data.typ = obsah->typ;
+						(*Kor)->data.data = obsah->data;
+					}
         }
     }
 }
@@ -159,6 +159,7 @@ void BVSZrus (UkTBSUzel *Kor) {
         if ((*Kor)->data.typ == TDRETEZEC) { // kvuli retezci, potrebujeme od-/alokovat novy prostor
         				Ret_uvolni((*Kor)->data.data.dataRet);
         }
+        free((*Kor)->klic);
         free(*Kor);
         (*Kor) = NULL;
     }
@@ -244,7 +245,10 @@ void BVSFunkceZrus (UkTBSFunkce *Kor) {
         if ((*Kor)->puk != NULL) {
             BVSFunkceZrus(&(*Kor)->puk);
         }
-
+        BVSZrus (&(*Kor)->data->koren);
+        free((*Kor)->data->zasobnik);
+        free((*Kor)->klic);
+        free((*Kor)->data);
         free(*Kor);
         (*Kor) = NULL;
     }

@@ -4,11 +4,14 @@ CC=gcc
 RM=rm -f
 
 
-all: scaner.o parser.o str.o zasobnik.o bvs.o seznam.o interpret.o main.o
-	$(CC) $(CFLAGS) -o $(BIN) main.o parser.o scaner.o seznam.o zasobnik.o interpret.o  str.o bvs.o -lm
+all: scaner.o parser.o str.o zasobnik.o bvs.o seznam.o vfce.o interpret.o main.o
+	$(CC) $(CFLAGS) -o $(BIN) main.o parser.o scaner.o seznam.o zasobnik.o vfce.o interpret.o  str.o bvs.o -lm
 
 parser.o: parser.c parser.h scaner.h zasobnik.h str.h interpret.h bvs.h
 	$(CC) $(CFLAGS) -c -o parser.o parser.c 
+	
+vfce.o: vfce.c vfce.h
+	$(CC) $(CFLAGS) -c -o vfce.o vfce.c
 	
 interpret.o: interpret.c interpret.h str.h bvs.h scaner.h parser.h
 	$(CC) $(CFLAGS) -c -o interpret.o interpret.c

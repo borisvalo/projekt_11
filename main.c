@@ -39,6 +39,7 @@ UkTBSPolozka op3;
 UkTBSFunkce strom_funkci;
 UkTBSFunkPol uzel_aktualni_funkce;
 char *pom_token_data;
+char * gen_klic;
 // --- konec novyho
 
 
@@ -50,19 +51,46 @@ UkTSezPar zas_zpracovani;
 
 UkTBSPolozka *uk_na_zasobnik;
 
+
+void odalokuj_vse(){
+
+
+	Sez_zrus(seznam_instrukci);
+	Sez_zrus_funkce(uzel_aktualni_funkce->zasobnik);
+	//BVSZrus (&uzel_aktualni_funkce->koren);
+	token_uvolni(token);
+	zasobnik_free(&zas_uk, &zas_int);
+	fclose(soubor);
+	BVSZrus (&pom_tab_sym);
+	BVSFunkceZrus(&strom_funkci);
+	zas_adres_zrus(zas_navr_adres);
+	Sez_zrus_funkce(zas_zpracovani);
+	free(zas_navr_adres);
+	free(seznam_instrukci);
+	free(zas_zpracovani);
+	free(gen_klic);
+	if((obsah)->typ == TDRETEZEC){
+		free((obsah)->data.dataRet);
+	}
+	free(obsah);
+}
+
+
+
+
+/************************************
+ * FUNKCE MAIN CELEHO INTERPRETU ****
+ ***********************************/
 int main(){
-		
-	printf("main: prvni kontrola\n");
 	chyba = ERR_OK;
 	if ((soubor = fopen("kod", "r")) == NULL) {
 		printf("main: otevreni souboru\n");
 		return ERR_INTERNI;
   }
-	//token = NULL;
+  
 	chyba = zasobnik_init(&zas_uk, &zas_int);
 	if (chyba!=ERR_OK){
-	//TODO: zavrit soubor
-	// odalokovat token
+		fclose(soubor);
 		return chyba;
 	}
 	
@@ -80,6 +108,8 @@ int main(){
 	zas_zpracovani = malloc(sizeof(struct sezPar));
 	Sez_init_funkce(zas_zpracovani);
 	
+	gen_klic = malloc(1);
+	
 	if ((obsah = malloc(sizeof (TBSPolozka)))==NULL){
 		return ERR_INTERNI;
 	}
@@ -91,6 +121,7 @@ int main(){
 	
 	if (chyba != ERR_OK){
 		printf(" ----- VSTUP NEPRIJAT s kodem: %d ------\n",chyba);
+		odalokuj_vse();
 		return chyba;
 	}else{
 		printf(" ----- VSTUP PRIJAT ----- \n");
@@ -123,16 +154,8 @@ int main(){
 	}
 	printf("**************************************\n");
 	BVSVypisStrom(&pom_tab_sym);
-	
-	Sez_zrus(seznam_instrukci);
-	
-	Sez_zrus_funkce(uzel_aktualni_funkce->zasobnik);
-	
-	BVSZrus (&uzel_aktualni_funkce->koren);
-	
-	token_uvolni(token);
-	zasobnik_free(&zas_uk, &zas_int);
-	fclose(soubor);
+
+	odalokuj_vse();
 	
 	if (chyba != ERR_OK){
 		printf(" ----- VSTUP NEPRIJAT s kodem: %d ------\n",chyba);
