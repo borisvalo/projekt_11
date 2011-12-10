@@ -129,14 +129,7 @@ int main(){
 	
 	//Interpret(seznam_instrukci);
 	chyba = Interpret(seznam_instrukci);
-	if (chyba != ERR_OK){
-		printf(" ----- VSTUP NEPRIJAT s kodem: %d ------\n",chyba);
-		return chyba;
-	}else{
-		printf(" ----- VSTUP PRIJAT ----- \n");
-	}
-	
-	
+	/*
 		printf("*************Vypis zasobniku****klokan******\n");
 	set_first(zas_zpracovani);
 	while(zas_zpracovani->aktivni != NULL){
@@ -154,7 +147,7 @@ int main(){
 	}
 	printf("**************************************\n");
 	BVSVypisStrom(&pom_tab_sym);
-
+*/
 	odalokuj_vse();
 	
 	if (chyba != ERR_OK){

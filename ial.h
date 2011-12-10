@@ -15,29 +15,7 @@ typedef TSeznam {
 	TPolozka *prvni;
 }
 
-
-
-/*
- * Funkce provádějící řazení pomocí algoritmu HEAP SORT
- * @param 
- * @return chybový kód
- */
-int sort (){
-
-
-}
-
-/*
- * Funkce provádějící vyhledávání pomocí Knuth-Moris-Prattova algoritmu
- * @param 
- * @return chybový kód
- */
-int sort (){
-
-
-}
-
-
-/*
- * Tabulka symbolů
- */
+void siftdown(char *ret, int left, int right);
+void heapsort(char *ret);
+int KMP_hledani(char *ret, int delka_ret, char *vzorek, int delka_vz);
+void fail(char *vzorek, int dv, int *p)

@@ -37,7 +37,7 @@ typedef union unidata {
 typedef enum enTTDat {
     TDCISLO,              //cislo
     TDRETEZEC,            //retezec
-    TDBOOL,               //boolean
+    TDBOOL,               //boolean //2
     TDNIL,                //nil
 } TTDat;
 

@@ -164,8 +164,12 @@ int Interpret(UkTSezInstr list) {
                 
             //podmineny skok
             case IN_PGOTO:
+            		printf("PGOTO typ: %d , hodn: %d\n", (((UkTBSPolozka)ukinstr->op1)->typ), ((UkTBSPolozka)ukinstr->op1)->data.dataBool);
             		if (!((((UkTBSPolozka)ukinstr->op1)->typ == TDBOOL && ((UkTBSPolozka)ukinstr->op1)->data.dataBool == FALSE) || ((UkTBSPolozka)ukinstr->op1)->typ == TDNIL)) { //cokoliv jineho nez FALSE a NIL znamena skok
+            			printf("-- PGOTO --\n");
             				  Sez_nastav_aktivni(list, (UkTPlzkaSez)ukinstr->op2);
+            		}else {
+            			Sez_dalsi(list);
             		}
             		break;
                 
@@ -363,8 +367,7 @@ int Interpret(UkTSezInstr list) {
                 break;
                 
             //operace prirazeni
-            case IN_PRIRAD:
-            ;
+            case IN_PRIRAD:;
 				UkTPlzkaSezPar PomUk = NULL;
 				UkTBSPolozka retezec = ((UkTBSPolozka)ukinstr->op2); // kam
 				UkTBSPolozka ukazatel = ((UkTBSPolozka)ukinstr->op3); // co
@@ -372,7 +375,7 @@ int Interpret(UkTSezInstr list) {
 				set_first(L);
 				
 				while(L->aktivni != NULL){
-			
+					printf("!!!!!!!!!!!!!!!!!! %s\n", retezec->data.dataRet);
 					if(strcmp(L->aktivni->parametr.klic, retezec->data.dataRet) == 0){
 						
 						PomUk = L->aktivni;
@@ -383,7 +386,11 @@ int Interpret(UkTSezInstr list) {
 				L->aktivni = PomUk;
 		
 				while(L->aktivni != NULL){
-					if(strcmp(L->aktivni->parametr.klic, retezec->data.dataRet) == 0){							
+					if(strcmp(L->aktivni->parametr.klic, retezec->data.dataRet) == 0){
+							//pri nahrazovani retezce odalokuji jeho pamet, nez zmenit data
+							if (L->aktivni->parametr.data->typ == TDRETEZEC){
+								free(L->aktivni->parametr.data->data.dataRet);
+							}
 							switch(ukazatel->typ){
 								case TDCISLO:
 									L->aktivni->parametr.data->data.dataCis = ukazatel->data.dataCis;
@@ -465,14 +472,17 @@ int Interpret(UkTSezInstr list) {
 				break;
 			// instrukce pro hledani promenne v globalnim zasobniku 
 			case IN_HLEDEJ:
-				break; //TODO: pozor, odstranit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				//break; //TODO: pozor, odstranit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 					printf("--------------- kam_priradit ma hodnotu: %s -----------------------\n", ukinstr->op2->data.dataRet);
-					if(najdi_prom((UkTSezPar)ukinstr->op1, ukinstr->op2->data.dataRet, (UkTBSPolozka *) ukinstr->op3) == TRUE){
+					UkTBSPolozka *pomocna_kralici_polozka;
+					pomocna_kralici_polozka = (UkTBSPolozka*) ukinstr->op3;
+					if(najdi_prom((UkTSezPar)ukinstr->op1, ukinstr->op2->data.dataRet, pomocna_kralici_polozka) == TRUE){
 						//printf("promenna nalezena!! typ %d\n", (*ukinstr->op3).typ);
 					}else{
 						printf("promenna nebyla do haje nalezena!!!!!!!!!!!!!!!\n");
 					}
-//					printf("op3: %d\n", (int)ukinstr->op3);
+					printf("op3: %d\n", (*((UkTBSPolozka*) ukinstr->op3))->typ);
+				  printf("------------------------------------------------navratova hodnota pred pred %d\n", (int) (*((UkTBSPolozka*) ukinstr->op3)));
 				break;
             //konec interpretu
             case IN_KONEC:

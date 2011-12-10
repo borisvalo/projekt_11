@@ -1327,7 +1327,7 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
 									
 									printf("1------- obsah na novem miste: %s ---------------------\n", (char*)obsah->data.dataRet);
-									Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op1);
+									//Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op1);
 									//printf("2--------------- operand 3 ma hodnotu: %f \n", op3->data.dataCis);
 									// v opreandu op3 je hodnota vypocitaneho vyrazu
 									Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, op1);
@@ -2003,7 +2003,20 @@ int syntax_vyrazu() {
 					//pom_prvek->uk_na_prvek_ts = NULL;
 				    
 				    if(token->typ == IDKONEC) {
-						Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, token->data, navratova_hodnota);
+				    	obsah->typ = TDRETEZEC;
+				    	Ret_alokuj(&obsah->data.dataRet, token->delka + 1);
+				    	strcpy (obsah->data.dataRet, token->data);
+							generuj_klic(0, &gen_klic);
+      				BVSVloz(&pom_tab_sym, gen_klic, obsah);
+      				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+      				
+							generuj_klic(0, &gen_klic);
+      				BVSVloz(&pom_tab_sym, gen_klic, NULL);
+      				BVSNajdi(pom_tab_sym, gen_klic, &op3);
+      				
+				    	Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, &op3);
+				    	//printf("U ID: op3->typ: %d\n", op3->typ);
+				    	navratova_hodnota = op3;
 				    	//pom_prvek->uk_na_prvek_ts = navratova_hodnota;
 				    }
 				    
@@ -2112,9 +2125,23 @@ int syntax_vyrazu() {
 						//pom_prvek->uk_na_prvek_ts = NULL;
 				    
 				    if(token->typ == IDKONEC) {
-				    	Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, token->data, navratova_hodnota);
-				    	printf("U ID: navratova_hodnota->typ: %d\n", navratova_hodnota->typ);
+				    	obsah->typ = TDRETEZEC;
+				    	Ret_alokuj(&obsah->data.dataRet, token->delka + 1);
+				    	strcpy (obsah->data.dataRet, token->data);
+							generuj_klic(0, &gen_klic);
+      				BVSVloz(&pom_tab_sym, gen_klic, obsah);
+      				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+      				
+							generuj_klic(0, &gen_klic);
+      				BVSVloz(&pom_tab_sym, gen_klic, NULL);
+      				BVSNajdi(pom_tab_sym, gen_klic, &op3);
+      				
+				    	Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, &op3);
+				    	//printf("U ID: op3->typ: %d\n", op3->typ);
+				    	navratova_hodnota = op3;
+				    	//printf("U ID: navratova_hodnota->typ: %d\n", navratova_hodnota->typ);
 				    	//pom_prvek->uk_na_prvek_ts = navratova_hodnota;
+				    	printf("------------------------------------------------navratova hodnota pred %d\n", (int) navratova_hodnota);
 				    }
 				    
 				    // Vlozeni do pomocne tabulky symbolu
