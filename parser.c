@@ -171,6 +171,8 @@ int preved_z_tokenu(int dalsi_token) {
             return MENSI;
         case DOLAR:
             return DOLAR;
+        case MYIDKONEC:
+            return MYIDKONEC;
 
     }
 
@@ -2010,6 +2012,7 @@ int syntax_vyrazu() {
       				BVSVloz(&pom_tab_sym, gen_klic, obsah);
       				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
       				
+      				/*
 							generuj_klic(0, &gen_klic);
       				BVSVloz(&pom_tab_sym, gen_klic, NULL);
       				BVSNajdi(pom_tab_sym, gen_klic, &op3);
@@ -2017,7 +2020,7 @@ int syntax_vyrazu() {
 				    	Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, &op3);
 				    	//printf("U ID: op3->typ: %d\n", op3->typ);
 				    	navratova_hodnota = op3;
-				    	//pom_prvek->uk_na_prvek_ts = navratova_hodnota;
+				    	//pom_prvek->uk_na_prvek_ts = navratova_hodnota;*/
 				    }
 				    
 				    // Vlozeni do pomocne tabulky symbolu
@@ -2128,20 +2131,22 @@ int syntax_vyrazu() {
 				    	obsah->typ = TDRETEZEC;
 				    	Ret_alokuj(&obsah->data.dataRet, token->delka + 1);
 				    	strcpy (obsah->data.dataRet, token->data);
-							generuj_klic(0, &gen_klic);
-      				BVSVloz(&pom_tab_sym, gen_klic, obsah);
-      				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+						
+						generuj_klic(0, &gen_klic);
+						BVSVloz(&pom_tab_sym, gen_klic, obsah);
+						BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
       				
-							generuj_klic(0, &gen_klic);
-      				BVSVloz(&pom_tab_sym, gen_klic, NULL);
-      				BVSNajdi(pom_tab_sym, gen_klic, &op3);
+						/*
+						generuj_klic(0, &gen_klic);
+						BVSVloz(&pom_tab_sym, gen_klic, NULL);
+						BVSNajdi(pom_tab_sym, gen_klic, &op3);
       				
 				    	Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, &op3);
 				    	//printf("U ID: op3->typ: %d\n", op3->typ);
 				    	navratova_hodnota = op3;
 				    	//printf("U ID: navratova_hodnota->typ: %d\n", navratova_hodnota->typ);
 				    	//pom_prvek->uk_na_prvek_ts = navratova_hodnota;
-				    	printf("------------------------------------------------navratova hodnota pred %d\n", (int) navratova_hodnota);
+				    	printf("------------------------------------------------navratova hodnota pred %d\n", (int) navratova_hodnota);*/
 				    }
 				    
 				    // Vlozeni do pomocne tabulky symbolu
@@ -2237,11 +2242,12 @@ int syntax_vyrazu() {
                 return ERR_INTERNI;
             }
 
+			prom2 = prom1;
             prom1 = preved_z_tokenu(prom1);
 
             // pokud se pri redukci prvek na zasobniku nerovna nicemu z case pod, tak to musim breaknout,
             // ptz se neda redukovat podle zadnyho pravidla !!!
-            if((prom1 != OPIDENTIFIKATOR) && (prom1 != NETERMINAL) && (prom1 != OPPRAVAZAVORKA)) {
+            if((prom1 != OPIDENTIFIKATOR) && (prom1 != MYIDKONEC) && (prom1 != NETERMINAL) && (prom1 != OPPRAVAZAVORKA)) {
                 printf("Neodpovida zadnemu pravidlu --> BREAK\n");
                 return ERR_SYNTAX;
             }
@@ -2287,8 +2293,16 @@ int syntax_vyrazu() {
                           //  return ERR_INTERNI;
                         //}
                         
-                        if(zasobnik_push(&zas_uk, NETERMINAL, &zas_int, ukprom) == ERR_INTERNI) {
-							return ERR_INTERNI;
+                        if(prom2 == IDKONEC) {
+							if(zasobnik_push(&zas_uk, MYIDKONEC, &zas_int, ukprom) == ERR_INTERNI) {
+								return ERR_INTERNI;
+							}
+						}
+						
+						else {
+							if(zasobnik_push(&zas_uk, NETERMINAL, &zas_int, ukprom) == ERR_INTERNI) {
+								return ERR_INTERNI;
+							}
 						}
 
 						printf("==========\nKolik_neterminalu = %d\n==========\n", kolik_neterminalu);
@@ -2325,9 +2339,10 @@ int syntax_vyrazu() {
                         return ERR_INTERNI;
                     }
 
+					
                     prom2 = preved_z_tokenu(prom2);
 
-                    if((prom1 == NETERMINAL) && (prom2 == OPLEVAZAVORKA) && (prom3 == MENSI)) {
+                    if(((prom1 == NETERMINAL) || (prom1 == MYIDKONEC)) && (prom2 == OPLEVAZAVORKA) && (prom3 == MENSI)) {
                     
                     		if(zasobnik_pristup_uk(&zas_uk, &ukprom, 1)) {
 								return ERR_INTERNI;
@@ -2360,8 +2375,16 @@ int syntax_vyrazu() {
                            // return ERR_INTERNI;
                         //}
                         
-                        if(zasobnik_push(&zas_uk, NETERMINAL, &zas_int, ukprom) == ERR_INTERNI) {
-							return ERR_INTERNI;
+                        if(prom1 == MYIDKONEC) {
+							if(zasobnik_push(&zas_uk, MYIDKONEC, &zas_int, ukprom) == ERR_INTERNI) {
+								return ERR_INTERNI;
+							}
+						}
+						
+						else {
+							if(zasobnik_push(&zas_uk, NETERMINAL, &zas_int, ukprom) == ERR_INTERNI) {
+								return ERR_INTERNI;
+							}
 						}
 
 						if(kolik_neterminalu == 0) {
@@ -2382,6 +2405,8 @@ int syntax_vyrazu() {
 
 
                 case NETERMINAL:            // redukce podle pravidla E -> E + E atd.
+                case MYIDKONEC:
+
 
                     zasobnik_pristup_int(&zas_int, &prom1, 1);
                     prom1 = preved_z_tokenu(prom1);
@@ -2437,16 +2462,33 @@ int syntax_vyrazu() {
                                 return ERR_INTERNI;
                             }
 
-                            if((prom1 == NETERMINAL) && (prom2 == MENSI)) {
+                            if(((prom1 == NETERMINAL) || (prom1 == MYIDKONEC)) && (prom2 == MENSI)) {
                             
 						
 								ukprom = NULL;
 
 								if(zasobnik_pristup_uk(&zas_uk, &ukprom, 0)) {
 									return ERR_INTERNI;
+								}
+								
+								if(zasobnik_pristup_int(&zas_int, &prom3, 0)) {
+									return ERR_INTERNI;
 								} 
 
 								op2 = ukprom;
+								
+								if(prom3 == MYIDKONEC) {
+									obnov(&obsah);
+									obsah->typ=TDCISLO;
+									obsah->data.dataCis = 2;
+									
+									generuj_klic(0, &gen_klic);					
+									BVSVloz(&pom_tab_sym, gen_klic, obsah);
+									BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+									
+									Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, ukprom);
+									op2 = NULL;
+								}
 								
 								ukprom = NULL;
 								
@@ -2454,7 +2496,27 @@ int syntax_vyrazu() {
 									return ERR_INTERNI;
 								} 
 								
+								if(zasobnik_pristup_int(&zas_int, &prom4, 2)) {
+									return ERR_INTERNI;
+								} 
+								
 								op1 = ukprom;
+								
+								
+								
+								if(prom4 == MYIDKONEC) {
+									obnov(&obsah);
+									obsah->typ=TDCISLO;
+									obsah->data.dataCis = 1;
+									
+									generuj_klic(0, &gen_klic);					
+									BVSVloz(&pom_tab_sym, gen_klic, obsah);
+									BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+									printf("navratova_hodnota: %d\n", navratova_hodnota->typ);
+									Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, ukprom);
+									op1 = NULL;
+								}
+								
 								generuj_klic(0, &gen_klic);					
 								BVSVloz(&pom_tab_sym, gen_klic, NULL);
 								BVSNajdi(pom_tab_sym, gen_klic, &op3);
@@ -2519,7 +2581,7 @@ int syntax_vyrazu() {
                 zasobnik_pristup_int(&zas_int, &prom1, j);
                 prom1 = preved_z_tokenu(prom1);
 
-                if((prom1 != NETERMINAL) && (prom1 != MENSI)) {
+                if((prom1 != NETERMINAL) && (prom1 != MYIDKONEC) && (prom1 != MENSI)) {
                     uk_na_terminal = zas_int.top - j;
                     break;
                 }
@@ -2613,7 +2675,7 @@ int syntax_vyrazu() {
 
 		// pokud uz na vstupni pasce nic neni, ale na zasobniku je neco jineho nez $E,
     // tak je to synt chyba
-    if(!((prom1 == NETERMINAL) && (prom2 == DOLAR) && (zas_int.top == 1))) {
+    if(!(((prom1 == NETERMINAL) || (prom1 == MYIDKONEC)) && (prom2 == DOLAR) && (zas_int.top == 1))) {
         //err_chyba = ERR_SYNTAX;
         printf("CHYBA\n");
         return ERR_SYNTAX;
@@ -2623,3 +2685,5 @@ int syntax_vyrazu() {
    return err_chyba;
 
 }  // konec funkce syntax_vyrazu()
+
+

@@ -1,6 +1,6 @@
 function main()
 local a=5;
-local b;
+local b=3;
 local c="retezec";
 
 --a=1;

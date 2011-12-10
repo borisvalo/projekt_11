@@ -126,7 +126,7 @@ typedef enum nazvyInstrukci {
 //STRUKTURY -----------------------------------------------
 
 //struktura pro jednotlive instrukce
-//ukazatel na void se pozdeji pretipuje
+//ukazatel na void se pozdeji pretypuje
 typedef struct {
   int typInstr;              // typ instrukce
   UkTBSPolozka op1;                 // adresa 1

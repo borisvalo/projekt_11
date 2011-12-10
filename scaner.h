@@ -39,9 +39,10 @@ typedef enum {
     MENSIROVNO,    // <=
     MENSITKOKONEC, // <
     NEROVNASE,     // ~=
-    IDKONEC,       // identifikator
-    MINUSKONEC,    // -
-    ENDOFFILE,     // EOF //23
+    IDKONEC, // identifikator
+		MINUSKONEC, // -
+		MYIDKONEC, // pomocny identifikator pro Martinu
+		ENDOFFILE, // EOF //24
     
     //klicova slova
     TNDO, TNELSE, TNEND, TNFALSE, TNFUNCTION, TNIF, TNLOCAL,

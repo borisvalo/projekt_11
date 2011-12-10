@@ -372,10 +372,10 @@ int Interpret(UkTSezInstr list) {
 				UkTBSPolozka retezec = ((UkTBSPolozka)ukinstr->op2); // kam
 				UkTBSPolozka ukazatel = ((UkTBSPolozka)ukinstr->op3); // co
 				UkTSezPar L = ((UkTSezPar)ukinstr->op1);
-				set_first(L);
+				L->aktivni = L->prvni;
 				
 				while(L->aktivni != NULL){
-					printf("!!!!!!!!!!!!!!!!!! %s\n", retezec->data.dataRet);
+					//printf("!!!!!!!!!!!!!!!!!! %s\n", retezec->data.dataRet);
 					if(strcmp(L->aktivni->parametr.klic, retezec->data.dataRet) == 0){
 						
 						PomUk = L->aktivni;
@@ -470,27 +470,67 @@ int Interpret(UkTSezInstr list) {
 						*/
 					}
 				break;
+				
+				
 			// instrukce pro hledani promenne v globalnim zasobniku 
-			case IN_HLEDEJ:
-				//break; //TODO: pozor, odstranit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-					printf("--------------- kam_priradit ma hodnotu: %s -----------------------\n", ukinstr->op2->data.dataRet);
-					UkTBSPolozka *pomocna_kralici_polozka;
-					pomocna_kralici_polozka = (UkTBSPolozka*) ukinstr->op3;
-					if(najdi_prom((UkTSezPar)ukinstr->op1, ukinstr->op2->data.dataRet, pomocna_kralici_polozka) == TRUE){
-						//printf("promenna nalezena!! typ %d\n", (*ukinstr->op3).typ);
-					}else{
-						printf("promenna nebyla do haje nalezena!!!!!!!!!!!!!!!\n");
-					}
-					printf("op3: %d\n", (*((UkTBSPolozka*) ukinstr->op3))->typ);
-				  printf("------------------------------------------------navratova hodnota pred pred %d\n", (int) (*((UkTBSPolozka*) ukinstr->op3)));
-				break;
-            //konec interpretu
-            case IN_KONEC:
-                return KONEC_OK;
-            
-            default:
-                break;
-        }
+					case IN_HLEDEJ:;
+						/*//break; //TODO: pozor, odstranit!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+							printf("--------------- kam_priradit ma hodnotu: %s -----------------------\n", ukinstr->op2->data.dataRet);
+							UkTBSPolozka *pomocna_kralici_polozka;
+							pomocna_kralici_polozka = (UkTBSPolozka*) ukinstr->op3;
+							if(najdi_prom((UkTSezPar)ukinstr->op1, ukinstr->op2->data.dataRet, pomocna_kralici_polozka) == TRUE){
+								//printf("promenna nalezena!! typ %d\n", (*ukinstr->op3).typ);
+							}else{
+								printf("promenna nebyla do haje nalezena!!!!!!!!!!!!!!!\n");
+							}
+							printf("op3: %d\n", (*((UkTBSPolozka*) ukinstr->op3))->typ);
+							printf("------------------------------------------------navratova hodnota pred pred %d\n", (int) (*((UkTBSPolozka*) ukinstr->op3)));
+						break;*/
+						
+						//op1 = zasobnik;
+						//op2 = int
+						//op3 = uktbsplzka s retezcem
+						UkTPlzkaSez pom_uk;
+						UkTBSPolozka *pomocna_kralici_polozka=NULL;
+						pom_uk = list->aktivni; // zapamatuji kam se vratit
+						pomocna_kralici_polozka = malloc(100);
+						list->aktivni = list->aktivni->ukdalsi;
+						while (list->aktivni->instrukce.typInstr == IN_HLEDEJ){
+							list->aktivni = list->aktivni->ukdalsi;
+						}
+						// list aktivni je prvni instrukce za hledej
+						
+						if(najdi_prom((UkTSezPar)ukinstr->op1, ukinstr->op3->data.dataRet, pomocna_kralici_polozka) == TRUE){
+							printf("promenna nalezena!!\n");
+						}else{
+							printf("promenna nebyla do haje nalezena!!!!!!!!!!!!!!!\n");
+						}
+						
+						//priradim vyhledany ukazatek do spravneho operandu spravne instrukce
+						switch((int) ukinstr->op2->data.dataCis){
+							case 1:
+								printf("prepisuji prvni operand\n");
+								list->aktivni->instrukce.op1 = *pomocna_kralici_polozka;
+								break; 
+							case 2:
+								printf("prepisuji druhy operand\n");
+								list->aktivni->instrukce.op2 = *pomocna_kralici_polozka;
+								break; 
+							default: 
+								printf("fatal error pri predavani do instrukce IN_HLEDEJ");
+						}
+						
+						// navrat aktivity zpet
+						list->aktivni = pom_uk;
+						
+						break;
+          //konec interpretu
+          case IN_KONEC:
+              return KONEC_OK;
+          
+          default:
+              break;
+      }
         
         if (ukinstr->typInstr != IN_GOTO && ukinstr->typInstr != IN_PGOTO) {
 			Sez_dalsi(list); //presuneme se na dalsi instrukci

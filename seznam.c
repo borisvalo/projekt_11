@@ -131,12 +131,13 @@ int insert_last(UkTSezPar L, char *ret) {
 
   if (L->prvni == NULL) { //seznam je prazdny
       L->prvni = PomUk;
+      L->aktivni = PomUk;
       L->posledni = PomUk;
       printf("mozna\n");
   }
   else {
-	L->posledni->ukdalsi = PomUk;
-	L->posledni = L->posledni->ukdalsi;
+		L->posledni->ukdalsi = PomUk;
+		L->posledni = L->posledni->ukdalsi;
   }
   
   return ERR_OK;
@@ -281,9 +282,9 @@ int najdi_prom(UkTSezPar L, char *K, UkTBSPolozka *ukazatel){
 			printf("klic aktivniho je: %s\n", L->aktivni->parametr.klic);
 			printf("klic hledany je: %s\n", K);
 			if(strcmp(L->aktivni->parametr.klic, K) == 0){
-				printf("najdi_prom: prirazuji data: %d, %f\n", L->aktivni->parametr.data->typ, L->aktivni->parametr.data->data.dataCis);
+				//printf("najdi_prom: prirazuji data: %d, %f\n", L->aktivni->parametr.data->typ, L->aktivni->parametr.data->data.dataCis);
 				*ukazatel = L->aktivni->parametr.data;
-				printf("najdi_prom: prirazuji data: %d, %f\n", (*ukazatel)->typ, (*ukazatel)->data.dataCis);
+				//printf("najdi_prom: prirazuji data: %d, %f\n", (*ukazatel)->typ, (*ukazatel)->data.dataCis);
 				//printf("ukazatel: %d\n", (int)ukazatel);
 					
 					
