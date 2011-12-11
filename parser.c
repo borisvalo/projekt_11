@@ -1313,11 +1313,6 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									/*if(!najdi_prom(zas_zpracovani, kam_priradit, op1)){
 										return ERR_SEMANT; 
 									}*/
-									
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-									BVSNajdi(pom_tab_sym, gen_klic, &op1);
-									
 									obnov(&obsah);
 									
 									obsah->typ = TDRETEZEC;
@@ -1332,13 +1327,13 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									//Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op1);
 									//printf("2--------------- operand 3 ma hodnotu: %f \n", op3->data.dataCis);
 									// v opreandu op3 je hodnota vypocitaneho vyrazu
-									Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, op1);
+									Vloz_instrukci(seznam_instrukci, IN_PRIRAD, zas_zpracovani, navratova_hodnota, op3);
 									
 									chyba = dej_token();
 									if (chyba != ERR_OK){
 										return chyba;
 									}
-									chyba = ll_prikazy();		
+									chyba = ll_prikazy();
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
@@ -1777,12 +1772,11 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 				generuj_klic(0, &gen_klic);
 				BVSVloz(&pom_tab_sym, gen_klic, obsah);
 				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
-				printf("---- =konstanta: op3: (typ: %d)   kam?priradit>  %s\n",(int)op3->typ,
-				(char*) navratova_hodnota->data.dataRet);
+				printf("---- =konstanta: op3: (typ: %d)   kam?priradit>  %s\n",(int)op3->typ,(char*) navratova_hodnota->data.dataRet);
 
 				printf("1------- obsah na novem miste: %s ---------------------\n", (char*)obsah->data.dataRet);
 				//printf("2------- adresa ktera se vyhledala v zasobniku: %d ---------------------\n", (int)op1);
-				Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, uk_na_zasobnik);
+				//Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, uk_na_zasobnik);
 				//printf("2--------------- operand 3 ma hodnotu: %f \n", op3->data.dataCis);
 				// v opreandu op3 je hodnota vypocitaneho vyrazu
 				Vloz_instrukci(seznam_instrukci, IN_PRIRAD, zas_zpracovani, navratova_hodnota, op3);

@@ -371,7 +371,8 @@ int Interpret(UkTSezInstr list) {
 				UkTPlzkaSezPar PomUk = NULL;
 				UkTBSPolozka retezec = ((UkTBSPolozka)ukinstr->op2); // kam
 				UkTBSPolozka ukazatel = ((UkTBSPolozka)ukinstr->op3); // co
-				UkTSezPar L = ((UkTSezPar)ukinstr->op1);
+				UkTSezPar L = ((UkTSezPar)ukinstr->op1); // kde
+			if (L != NULL)	{
 				L->aktivni = L->prvni;
 				
 				while(L->aktivni != NULL){
@@ -382,7 +383,7 @@ int Interpret(UkTSezInstr list) {
 					}
 					set_nasl(L);
 				}
-				
+				}
 				L->aktivni = PomUk;
 		
 				while(L->aktivni != NULL){
