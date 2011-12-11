@@ -826,19 +826,16 @@ int ll_prikazy(){
 									generuj_klic(0, &gen_klic);
 									BVSVloz(&pom_tab_sym, gen_klic, NULL);
                   BVSNajdi(pom_tab_sym, gen_klic, &op3);
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op2);
 
 									if ( (op2 = malloc( sizeof(TBSPolozka) )) == NULL){
 										return ERR_INTERNI;
 									}
 
-                  if(( ( (UkTBSPolozka) op2)->data.dataRet = (char *) malloc(token->delka * sizeof(char)))==NULL){
+                  if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc(token->delka * sizeof(char)))==NULL){
 										return ERR_INTERNI;
                   }
-                  strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
-									Vloz_instrukci(seznam_instrukci, IN_READ, (UkTBSPolozka) op2, NULL, (UkTBSPolozka) op3);
+                  strcpy(((UkTBSPolozka) op3)->data.dataRet, token->data);
+									Vloz_instrukci(seznam_instrukci, IN_READ, NULL, NULL, (UkTBSPolozka) op3);
 									
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
@@ -1166,7 +1163,7 @@ int ll_write(){
 				}
 				return chyba;
 			}
-			Vloz_instrukci(seznam_instrukci, IN_WRITE, op3, NULL, NULL);
+			Vloz_instrukci(seznam_instrukci, IN_WRITE, NULL, NULL, op3);
 			if(token->typ == CARKA){
 					chyba = ll_write();
 					if (chyba!=ERR_OK){
@@ -1406,15 +1403,16 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									generuj_klic(0, &gen_klic);
 									BVSVloz(&pom_tab_sym, gen_klic, NULL);
                   BVSNajdi(pom_tab_sym, gen_klic, &op2);
-
+									/*
 									if ( (op2 = malloc( sizeof(TBSPolozka) )) == NULL){
 										return ERR_INTERNI;
 									}
-
+									*/
                   if(( ( (UkTBSPolozka) op2)->data.dataRet = (char *) malloc(token->delka * sizeof(char)))==NULL){
 										return ERR_INTERNI;
                   }
                   strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
+
 									Vloz_instrukci(seznam_instrukci, IN_READ, (UkTBSPolozka) op2, NULL, (UkTBSPolozka) op3);
 									
 									chyba = dej_token();		
@@ -1432,12 +1430,6 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
-									
-									//prirazeni vysledku
-									if(!BVSNajdi (pom_tab_sym, kam_priradit, &op1)){
-										return ERR_SEMANT; 
-									}
-									Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, op1);
 										
 									//další příkazy
 									chyba = dej_token();		
@@ -1903,9 +1895,7 @@ int syntakticky_analyzator(){
  
  
  
- 
-
-int syntax_vyrazu() {
+ int syntax_vyrazu() {
 
     //TPrvek pom1, pom2, pom3, pom4;
     int znamenko;   // co se bude provadet, podle precedencni tabulky
@@ -1928,6 +1918,7 @@ int syntax_vyrazu() {
     pom4 = malloc(sizeof(struct stTPrvek));
     */
 		int kolik_neterminalu = 0;
+		int pocet_redukci = 0;
 
     zasobnik_vynuluj(&zas_uk, &zas_int);
     
@@ -2006,6 +1997,8 @@ int syntax_vyrazu() {
       				BVSVloz(&pom_tab_sym, gen_klic, obsah);
       				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
       				
+      				kolik_neterminalu++;
+      				
       				/*
 							generuj_klic(0, &gen_klic);
       				BVSVloz(&pom_tab_sym, gen_klic, NULL);
@@ -2027,6 +2020,7 @@ int syntax_vyrazu() {
         				BVSVloz(&pom_tab_sym, gen_klic, obsah);
         				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
         				//pom_prvek->uk_na_prvek_ts = navratova_hodnota;		
+        				kolik_neterminalu++;
         		}
         		
         		else if(token->typ == RETEZEC) {
@@ -2038,6 +2032,7 @@ int syntax_vyrazu() {
         				BVSVloz(&pom_tab_sym, gen_klic, obsah);
         				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
         				//pom_prvek->uk_na_prvek_ts = navratova_hodnota;	
+        				kolik_neterminalu++;
         		}
         		
         		else if(token->typ == TNTRUE) {
@@ -2048,6 +2043,7 @@ int syntax_vyrazu() {
         				BVSVloz(&pom_tab_sym, gen_klic, obsah);
         				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
         				//pom_prvek->uk_na_prvek_ts = navratova_hodnota;	
+        				kolik_neterminalu++;
         		}
         		
         		else if(token->typ == TNFALSE) {
@@ -2058,6 +2054,7 @@ int syntax_vyrazu() {
         				BVSVloz(&pom_tab_sym, gen_klic, obsah);
         				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
         				//pom_prvek->uk_na_prvek_ts = navratova_hodnota;	
+        				kolik_neterminalu++;
         		}
         		
         		//pro operatory ... TO MI TAM JAKO VAZNE CHYBELO, NEBO UZ MI HRABE ?!?!?!?!??!?
@@ -2129,6 +2126,7 @@ int syntax_vyrazu() {
 						generuj_klic(0, &gen_klic);
 						BVSVloz(&pom_tab_sym, gen_klic, obsah);
 						BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+						kolik_neterminalu++;
       				
 						/*
 						generuj_klic(0, &gen_klic);
@@ -2157,6 +2155,7 @@ int syntax_vyrazu() {
         				//printf(">>>>>>>>> obsah->typ: %d\n", obsah->typ);
         				//printf(">>>>>>>>> navratova_hodnota->data.dataCis: %f\n", navratova_hodnota->data.dataCis);
         				//printf(">>>>>>>>> navratova_hodnota->typ: %d\n", navratova_hodnota->typ);
+        				kolik_neterminalu++;
         				
         		}
         		
@@ -2173,6 +2172,7 @@ int syntax_vyrazu() {
         				//printf(">>>>>>>>> obsah->typ: %d\n", obsah->typ);
         				//printf(">>>>>>>>> navratova_hodnota->data.dataRet: %s\n", navratova_hodnota->data.dataRet);
         				//printf(">>>>>>>>> navratova_hodnota->typ: %d\n", navratova_hodnota->typ);
+        				kolik_neterminalu++;
 
         		}
         		
@@ -2184,6 +2184,7 @@ int syntax_vyrazu() {
         				BVSVloz(&pom_tab_sym, gen_klic, obsah);
         				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
         				//pom_prvek->uk_na_prvek_ts = navratova_hodnota;	
+        				kolik_neterminalu++;
         		}
         		
         		else if(token->typ == TNFALSE) {
@@ -2193,7 +2194,8 @@ int syntax_vyrazu() {
 								generuj_klic(0, &gen_klic);
         				BVSVloz(&pom_tab_sym, gen_klic, obsah);
         				BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
-        				//pom_prvek->uk_na_prvek_ts = navratova_hodnota;	
+        				//pom_prvek->uk_na_prvek_ts = navratova_hodnota;
+        				kolik_neterminalu++;	
         		}
         		
         		//pro operatory ... TO MI TAM JAKO VAZNE CHYBELO, NEBO UZ MI HRABE ?!?!?!?!??!?
@@ -2299,15 +2301,30 @@ int syntax_vyrazu() {
 							}
 						}
 
-						printf("==========\nKolik_neterminalu = %d\n==========\n", kolik_neterminalu);
+						//printf("==========\nKolik_neterminalu = %d\n==========\n", kolik_neterminalu);
 
-						if(kolik_neterminalu == 0) {
-							/*BVSVloz(&pom_tab_sym, generuj_klic(0), prvek_pomocny->uk_na_prvek_ts);
-							BVSNajdi(pom_tab_sym, generuj_klic(1), &op3);*/
+						/*if(kolik_neterminalu == 0) {
+							
+							if(prom2 == IDKONEC) {
+								obnov(&obsah);
+								obsah->typ=TDCISLO;
+								obsah->data.dataCis = 3;
+								
+								generuj_klic(0, &gen_klic);					
+								BVSVloz(&pom_tab_sym, gen_klic, obsah);
+								BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+								
+								Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, ukprom);
+							
+							}
+							
 							op3 = ukprom;
-						}
+							
+							
+						}*/
 
-						kolik_neterminalu++;
+						//kolik_neterminalu++;
+						pocet_redukci++;
 
                     }
 
@@ -2381,13 +2398,27 @@ int syntax_vyrazu() {
 							}
 						}
 
-						if(kolik_neterminalu == 0) {
-							//BVSVloz(&pom_tab_sym, generuj_klic(0), ukprom);
-							//BVSNajdi(pom_tab_sym, generuj_klic(1), &op3);
+						/*if(kolik_neterminalu == 0) {
+							
+							if(prom2 == MYIDKONEC) {
+								obnov(&obsah);
+								obsah->typ=TDCISLO;
+								obsah->data.dataCis = 3;
+								
+								generuj_klic(0, &gen_klic);					
+								BVSVloz(&pom_tab_sym, gen_klic, obsah);
+								BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+								
+								Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, ukprom);
+							
+							}
+							
 							op3 = ukprom;
-						}
+							
+						}*/
 
-						kolik_neterminalu++;
+						//kolik_neterminalu++;
+						pocet_redukci++;
 
                     }
 
@@ -2549,6 +2580,7 @@ int syntax_vyrazu() {
 								}
 								
 								//printf("PUSHNU op3 typ: %d\n", op3->typ);
+								pocet_redukci++;
 
                             }
 
@@ -2593,6 +2625,9 @@ int syntax_vyrazu() {
 				return ERR_LEX;
 			}
         }
+        
+        
+
 
 
 
@@ -2606,6 +2641,38 @@ int syntax_vyrazu() {
             (token->typ != MENSITKOKONEC) && (token->typ != TNNIL) && (token->typ != TNFALSE) &&
             (token->typ != TNTRUE)) &&
             (zas_int.top == 1) && (zas_int.array[1] == NETERMINAL) && (zas_int.array[0] == DOLAR)) {
+				
+				
+			if((pocet_redukci == 1) && (kolik_neterminalu == 1)) {
+			
+				if(zasobnik_pristup_uk(&zas_uk, &ukprom, 0)) {
+					return ERR_INTERNI;
+				}
+				
+				if(zasobnik_pristup_int(&zas_int, &prom2, 0)) {
+					return ERR_INTERNI;
+				}
+			
+				if(prom2 == MYIDKONEC) {
+					obnov(&obsah);
+					obsah->typ=TDCISLO;
+					obsah->data.dataCis = 3;
+					
+					generuj_klic(0, &gen_klic);					
+					BVSVloz(&pom_tab_sym, gen_klic, obsah);
+					BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+					
+					Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, ukprom);
+				
+				}
+				
+				op3 = ukprom;
+				
+			}
+				
+				
+				
+				
 
             printf("OK\n");
             return ERR_OK;
@@ -2679,5 +2746,4 @@ int syntax_vyrazu() {
    return err_chyba;
 
 }  // konec funkce syntax_vyrazu()
-
 

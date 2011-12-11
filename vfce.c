@@ -72,12 +72,20 @@ void substr(UkTBSPolozka muj_odkaz, char **string, int cislo1, int cislo2){
     }
 }
 
-void read(UkTBSPolozka muj_odkaz, TBSData *ukazatel){
+void read(UkTBSPolozka muj_odkaz, UkTBSPolozka ukazatel){
 	float pom; 
 	int delka_promenne=DELKA_PROMENNE;
-	Ret_alokuj(&ukazatel->dataRet, delka_promenne);
 	int znak;
 	int citac=0;
+	printf("instrukce read %d\n", muj_odkaz->typ);
+	if (ukazatel == NULL){
+		printf("neujkloadam, vystup\n");
+		scanf("%*s");
+		return;
+	}
+	Ret_alokuj(&ukazatel->data.dataRet, delka_promenne);
+	
+	printf("read: alokovano\n");
     //jedna-li se o KLADNE CISLO - nacte dany pocet znaku - navratovy typ string
 	if(muj_odkaz->typ==TDCISLO){ 
         
@@ -86,17 +94,17 @@ void read(UkTBSPolozka muj_odkaz, TBSData *ukazatel){
 		while(znak !='\n' && znak !=EOF && citac<muj_odkaz->data.dataCis){
 			if(citac+1 > delka_promenne){
 			 	delka_promenne *=2;
-                Ret_realokuj(&ukazatel->dataRet,delka_promenne);	
+                Ret_realokuj(&ukazatel->data.dataRet,delka_promenne);	
 			}
-			ukazatel->dataRet[citac] = znak;
+			ukazatel->data.dataRet[citac] = znak;
 			citac++;
             znak=getchar();
 		}
 		if(citac+1 > delka_promenne){
 			delka_promenne *=2;
-			Ret_realokuj(&ukazatel->dataRet,delka_promenne);	
+			Ret_realokuj(&ukazatel->data.dataRet,delka_promenne);	
 		}
-		ukazatel->dataRet[citac] = '\0';
+		ukazatel->data.dataRet[citac] = '\0';
 		
 	}
     // jedna-li se o retezec a zaroven o format "*n" - nacita cislo s navratovym typek number
@@ -107,7 +115,7 @@ void read(UkTBSPolozka muj_odkaz, TBSData *ukazatel){
 			if(scanf("%f\n",&pom)==0){
 				//return ;
 			}
-			ukazatel->dataCis =  pom;
+			ukazatel->data.dataCis =  pom;
 			//printf("%f\n",ukazatel->dataCis);
             return;
 		}	
@@ -116,18 +124,18 @@ void read(UkTBSPolozka muj_odkaz, TBSData *ukazatel){
 			while((znak=getchar())!='\n' && znak !=EOF){		
 				if(citac+1 > delka_promenne){
 					delka_promenne *=2;
-                    Ret_realokuj(&ukazatel->dataRet,delka_promenne);		
+                    Ret_realokuj(&ukazatel->data.dataRet,delka_promenne);		
 				}
-				ukazatel->dataRet[citac] = znak;
+				ukazatel->data.dataRet[citac] = znak;
 				citac++;
                 
 			}
 			if(citac+1 > delka_promenne){
                 delka_promenne *=2;
-                Ret_realokuj(&ukazatel->dataRet,delka_promenne);	
+                Ret_realokuj(&ukazatel->data.dataRet,delka_promenne);	
                 
 			}
-			ukazatel->dataRet[citac] = '\0';
+			ukazatel->data.dataRet[citac] = '\0';
             
 		}
         // jedna-li se o retezec a zaroven o format "*a"-nacita znaky po konec souboru-navrat.typ string
@@ -135,24 +143,26 @@ void read(UkTBSPolozka muj_odkaz, TBSData *ukazatel){
 			while((znak=getchar())!=EOF){		
 				if(citac+1 > delka_promenne){
 					delka_promenne *=2;
-					Ret_realokuj(&ukazatel->dataRet,delka_promenne);			
+					Ret_realokuj(&ukazatel->data.dataRet,delka_promenne);			
 				}
-				ukazatel->dataRet[citac] = znak;
+				ukazatel->data.dataRet[citac] = znak;
 				citac++;
 			}
 			if(citac+1 > delka_promenne){
                 delka_promenne *=2;
-                Ret_realokuj(&ukazatel->dataRet,delka_promenne);	
+                Ret_realokuj(&ukazatel->data.dataRet,delka_promenne);	
 			}
-			ukazatel->dataRet[citac] = '\0';
+			ukazatel->data.dataRet[citac] = '\0';
             
 		}
 		else{	
 			//chyba
+			printf("chyba1\n");
 		}
 	}
 	else{
 		//chyba
+			printf("chyba2\n");
 	}
     
     return;

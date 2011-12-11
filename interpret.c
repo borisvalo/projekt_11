@@ -66,12 +66,28 @@ int Interpret(UkTSezInstr list) {
         switch (ukinstr->typInstr) { //automat
             //cteni
             case IN_READ:
-                read((UkTBSPolozka)ukinstr->op1, &(ukinstr->op3->data));
+                
+								printf("------------------------vkladam retezec: %s\n", ((UkTBSPolozka)ukinstr->op1)->data.dataRet);	
+								//read((UkTBSPolozka)ukinstr->op1, &(ukinstr->op3->data));
+                
+                if (( strcmp( ((UkTBSPolozka)ukinstr->op1)->data.dataRet, "*n")==0 ) || (strcmp( ((UkTBSPolozka)ukinstr->op1)->data.dataRet, "*l")==0) || (strcmp( ((UkTBSPolozka)ukinstr->op1)->data.dataRet, "*a")==0)){
+            	     ((UkTBSPolozka)ukinstr->op1)->typ = TDRETEZEC;           
+                }else{
+	        	     ((UkTBSPolozka)ukinstr->op1)->typ = TDCISLO; 
+                	int cislo;
+                	cislo = atoi( ((UkTBSPolozka)ukinstr->op1)->data.dataRet );
+                	free( ((UkTBSPolozka)ukinstr->op1)->data.dataRet);
+                	((UkTBSPolozka)ukinstr->op1)->data.dataCis = cislo;
+                }
+                
+                
+                
+                read((UkTBSPolozka)ukinstr->op1, ukinstr->op3);
                 break;
                 
             //vypis
             case IN_WRITE:
-                write((UkTBSPolozka)ukinstr->op1);
+                write((UkTBSPolozka)ukinstr->op3);
                 break;
                 
             //soucet
@@ -81,6 +97,7 @@ int Interpret(UkTSezInstr list) {
                 if (((UkTBSPolozka)ukinstr->op1)->typ == TDCISLO && ((UkTBSPolozka)ukinstr->op2)->typ == TDCISLO) {
                     ((UkTBSPolozka)ukinstr->op3)->data.dataCis = ((UkTBSPolozka)ukinstr->op1)->data.dataCis + ((UkTBSPolozka)ukinstr->op2)->data.dataCis;
                     ((UkTBSPolozka)ukinstr->op3)->typ = TDCISLO;
+                    printf("%d - %d - %d",(int)ukinstr->op1, (int)ukinstr->op2, (int)ukinstr->op3);
                     printf("Co vysledek: %f\n", ((UkTBSPolozka)ukinstr->op3)->data.dataCis);
                     BVSVypisStrom(&pom_tab_sym);
                     //printf("Cislo adresy: %d\n", ((int)(UkTBSPolozka)ukinstr->op3));
@@ -367,57 +384,59 @@ int Interpret(UkTSezInstr list) {
                 break;
                 
             //operace prirazeni
-            case IN_PRIRAD:;
+            case IN_PRIRAD:
+            set_first(zas_zpracovani);
+        char znacka[] = "function";
 				UkTPlzkaSezPar PomUk = NULL;
 				UkTBSPolozka retezec = ((UkTBSPolozka)ukinstr->op2); // kam
 				UkTBSPolozka ukazatel = ((UkTBSPolozka)ukinstr->op3); // co
-				UkTSezPar L = ((UkTSezPar)ukinstr->op1); // kde
-			if (L != NULL)	{
-				L->aktivni = L->prvni;
+				//UkTSezPar L = ((UkTSezPar)ukinstr->op1); // kde
+			if (zas_zpracovani != NULL)	{
+				//L->aktivni = L->prvni;
 				
-				while(L->aktivni != NULL){
-					//printf("!!!!!!!!!!!!!!!!!! %s\n", retezec->data.dataRet);
-					if(strcmp(L->aktivni->parametr.klic, retezec->data.dataRet) == 0){
+					while(zas_zpracovani->aktivni != NULL){
+						//printf("!!!!!!!!!!!!!!!!!! %s\n", retezec->data.dataRet);
+						if(strcmp(zas_zpracovani->aktivni->parametr.klic, znacka) == 0){
 						
-						PomUk = L->aktivni;
+							PomUk = zas_zpracovani->aktivni;
+						}
+						set_nasl(zas_zpracovani);
 					}
-					set_nasl(L);
 				}
-				}
-				L->aktivni = PomUk;
+				zas_zpracovani->aktivni = PomUk;
 		
-				while(L->aktivni != NULL){
-					if(strcmp(L->aktivni->parametr.klic, retezec->data.dataRet) == 0){
+				while(zas_zpracovani->aktivni != NULL){
+					if(strcmp(zas_zpracovani->aktivni->parametr.klic, retezec->data.dataRet) == 0){
 							//pri nahrazovani retezce odalokuji jeho pamet, nez zmenit data
-							if (L->aktivni->parametr.data->typ == TDRETEZEC){
-								free(L->aktivni->parametr.data->data.dataRet);
+							if (zas_zpracovani->aktivni->parametr.data->typ == TDRETEZEC){
+								free(zas_zpracovani->aktivni->parametr.data->data.dataRet);
 							}
 							switch(ukazatel->typ){
 								case TDCISLO:
-									L->aktivni->parametr.data->data.dataCis = ukazatel->data.dataCis;
-									printf("promenna nalezena a zkopirovana je cislo a jeho hodnota je: %f ma byt: %f\n", ukazatel->data.dataCis, L->aktivni->parametr.data->data.dataCis);
+									zas_zpracovani->aktivni->parametr.data->data.dataCis = ukazatel->data.dataCis;
+									printf("promenna nalezena a zkopirovana je cislo a jeho hodnota je: %f ma byt: %f\n", ukazatel->data.dataCis, zas_zpracovani->aktivni->parametr.data->data.dataCis);
 									break;
 								case TDRETEZEC:
 									printf("U konkatenace blbne strlen : %s\n", ukazatel->data.dataRet);
-									if ((L->aktivni->parametr.data->data.dataRet = malloc((strlen(ukazatel->data.dataRet)+1)*sizeof(char)))==NULL){
+									if ((zas_zpracovani->aktivni->parametr.data->data.dataRet = malloc((strlen(ukazatel->data.dataRet)+1)*sizeof(char)))==NULL){
 										return ERR_INTERNI;
 									}
-									strcpy(L->aktivni->parametr.data->data.dataRet, ukazatel->data.dataRet);
+									strcpy(zas_zpracovani->aktivni->parametr.data->data.dataRet, ukazatel->data.dataRet);
 									
 									printf("promenna nalezena a zkopirovana je retezec a jeho hodnota je: %s\n", ukazatel->data.dataRet);
 									break;
 								case TDBOOL:
-									L->aktivni->parametr.data->data.dataBool = ukazatel->data.dataBool;
+									zas_zpracovani->aktivni->parametr.data->data.dataBool = ukazatel->data.dataBool;
 									printf("promenna nalezena a zkopirovana je boolean a jeho hodnota je: %d\n", ukazatel->data.dataBool);
 									break;
 								case TDNIL:
 									break;
 							}
-							L->aktivni->parametr.data->typ= ukazatel->typ;
+							zas_zpracovani->aktivni->parametr.data->typ= ukazatel->typ;
 							printf("dostal sem se za switch\n");
 					}
 					
-					set_nasl(L);
+					set_nasl(zas_zpracovani);
 				}
 				/*
 				adr = ukinstr->op3;
@@ -516,6 +535,10 @@ int Interpret(UkTSezInstr list) {
 							case 2:
 								printf("prepisuji druhy operand\n");
 								list->aktivni->instrukce.op2 = *pomocna_kralici_polozka;
+								break; 
+							case 3:
+								printf("prepisuji treti operand\n");
+								list->aktivni->instrukce.op3 = *pomocna_kralici_polozka;
 								break; 
 							default: 
 								printf("fatal error pri predavani do instrukce IN_HLEDEJ");

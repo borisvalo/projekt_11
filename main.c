@@ -53,8 +53,6 @@ UkTBSPolozka *uk_na_zasobnik;
 
 
 void odalokuj_vse(){
-
-
 	Sez_zrus(seznam_instrukci);
 	Sez_zrus_funkce(uzel_aktualni_funkce->zasobnik);
 	//BVSZrus (&uzel_aktualni_funkce->koren);
@@ -129,7 +127,7 @@ int main(){
 	
 	//Interpret(seznam_instrukci);
 	chyba = Interpret(seznam_instrukci);
-	/*
+	
 		printf("*************Vypis zasobniku****klokan******\n");
 	set_first(zas_zpracovani);
 	while(zas_zpracovani->aktivni != NULL){
@@ -146,8 +144,8 @@ int main(){
 		set_nasl(zas_zpracovani);
 	}
 	printf("**************************************\n");
-	BVSVypisStrom(&pom_tab_sym);
-*/
+	//BVSVypisStrom(&pom_tab_sym);
+
 	odalokuj_vse();
 	
 	if (chyba != ERR_OK){

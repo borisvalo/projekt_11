@@ -88,8 +88,8 @@ void BVSFunkceZrus (UkTBSFunkce *Kor);
 
 // typy instrukci
 typedef enum nazvyInstrukci {
-    IN_READ = 0,     // read        | op     | /   | cil  0
-    IN_WRITE,    // write       | op     | /   | /    1
+    IN_READ = 0,     // read    | cil     | /   | op  0 //puvodni: read        | op     | /   | cil
+    IN_WRITE,    // write       | /     | /   | op    1
     //---------------------------------------------
     IN_ADD,      // +           | op     | op  | cil  2
     IN_SUB,      // -           | op     | op  | cil  3
@@ -112,7 +112,7 @@ typedef enum nazvyInstrukci {
     IN_TYPE,     // type()      | op     | /   | cil 17
     IN_FIND,     // find()      | ret    | hl  | cil 18  hl - hledany podretezec
     IN_SORT,     // heapsort()  | op     | /   | cil 19
-    IN_SUBSTR,   // substr()    |                    20
+    IN_SUBSTR,   // substr()    | ret | pole_cis | cil  20
     //---------------------------------------------
     IN_PRIRAD,   // prirazeni   | zas    | kam | co  21
     //---------------------------------------------
