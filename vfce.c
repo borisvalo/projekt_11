@@ -35,12 +35,14 @@ void write(UkTBSPolozka muj_odkaz){
 }
 
 void substr(UkTBSPolozka muj_odkaz, char **string, int cislo1, int cislo2){
+	// 					zdroj	           |           cil
 	int delka_promenne=DELKA_PROMENNE;
 	Ret_alokuj(string, delka_promenne);
     
     if(muj_odkaz->typ==TDRETEZEC){ 
 		
         
+      	printf("substr se snZIME ZABIT POMOCI: %s %d %d\n", muj_odkaz->data.dataRet, cislo1, cislo2);
         if( (cislo2 == 0) || ((cislo1) > (int)strlen(muj_odkaz->data.dataRet)) || (cislo2<cislo1) ){
             (*string)[0]='\0';
             return;
@@ -52,10 +54,11 @@ void substr(UkTBSPolozka muj_odkaz, char **string, int cislo1, int cislo2){
 			
         }
         
+            	printf("substr zije!\n");
         int i=cislo1-1;
         int j = 0;			
         while(i<cislo2){
-            
+            printf("sub - cykl\n");
             if(i>=0){
                 if(j+1 > delka_promenne){
                     delka_promenne *=2;
@@ -67,8 +70,8 @@ void substr(UkTBSPolozka muj_odkaz, char **string, int cislo1, int cislo2){
             }
             i++;
         }
-        
-        //printf("%s\n", (*string));
+        (*string)[] = '\0';
+        printf("%s\n", (*string));
     }
 }
 

@@ -1,7 +1,7 @@
 function main()
 local a=5;
-local b=3;
-local c=true;
+local b=true;
+local c="poradny retezec :-)";
 
 --a=1;
 --a=(12);
@@ -27,6 +27,9 @@ end;]]
 --write(a, b, c);
 --read("*n");
 --a = read("*n");
-a=type(d);
+--a=type(c);
+--a=type(d); -- !!!!!!!!!!!!!! segfault na neexistujici d
 
+b=substr(c, 3, 5);
+write(b);
 end;

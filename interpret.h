@@ -112,15 +112,16 @@ typedef enum nazvyInstrukci {
     IN_TYPE,     // type()      | op     | /   | cil 17
     IN_FIND,     // find()      | ret    | hl  | cil 18  hl - hledany podretezec
     IN_SORT,     // heapsort()  | op     | /   | cil 19
-    IN_SUBSTR,   // substr()    | ret | pole_cis | cil  20
+    IN_SUBSTR_1,   // substr()    | ret | /    | /   20
+    IN_SUBSTR_2,   // substr()    | cis | cis  | cil 21
     //---------------------------------------------
-    IN_PRIRAD,   // prirazeni   | zas    | kam | co  21
+    IN_PRIRAD,   // prirazeni   | zas    | kam | co  22
     //---------------------------------------------
-    IN_POP,      // POP adrr    | funkce | cil | /   22
-    IN_PUSH,     // PUSH adrr   | funkce | adr | /   23
-    IN_HLEDEJ,   // hledani     | kde    | co  | cil 24
+    IN_POP,      // POP adrr    | funkce | cil | /   23
+    IN_PUSH,     // PUSH adrr   | funkce | adr | /   24
+    IN_HLEDEJ,   // hledani     | kde    | co  | cil 25
     //---------------------------------------------
-    IN_KONEC,    // konec       |                    25
+    IN_KONEC,    // konec       |                    26
 } TNazInstr;
 
 //STRUKTURY -----------------------------------------------

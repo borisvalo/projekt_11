@@ -34,7 +34,7 @@ extern UkTBSFunkPol uzel_aktualni_funkce;
 extern UkTBSPolozka obsah;
 
 extern UkTBSUzel pom_tab_sym; //jenom na zkousku..
-
+UkTBSPolozka pom_substr;
 
 int Vloz_instrukci(UkTSezInstr seznam, int typ, void *op1, void *op2, void *op3) {
     TInstr polozka;
@@ -385,9 +385,26 @@ int Interpret(UkTSezInstr list) {
                 //heapsort(strcmp(((UkTBSPolozka)ukinstr->op3)->data.dataRet);
                 break;
                 
-            case IN_SUBSTR:
-                //substr(zakladni_retezec, vychozi_retezec, prvni_cislo, druhe_cislo);
+            case IN_SUBSTR_1:
+            	pom_substr = ((UkTBSPolozka)ukinstr->op1);
+	            break;
+            case IN_SUBSTR_2:
+		          	if (((UkTBSPolozka)ukinstr->op3) == NULL){
+			          	break;
+		          	}
+		          /*
+		          	if (((UkTBSPolozka)ukinstr->op3)->typ == TDRETEZEC){
+		          		free(((UkTBSPolozka)ukinstr->op3)->data.dataRet);
+		          	}
+		          	((UkTBSPolozka)ukinstr->op3)->typ = TDRETEZEC;
+            */
+            		pom_substr->typ = TDRETEZEC;
+		          	(((UkTBSPolozka)ukinstr->op3))->typ = TDRETEZEC;
+		          	printf("string: _%s_\n",(((UkTBSPolozka)ukinstr->op3))->data.dataRet);
+                substr(pom_substr, &(((UkTBSPolozka)ukinstr->op3)->data.dataRet), ((UkTBSPolozka)ukinstr->op1)->data.dataCis, ((UkTBSPolozka)ukinstr->op2)->data.dataCis);
                 
+		          	printf("string: _%s_\n",(((UkTBSPolozka)ukinstr->op3)->data.dataRet));
+		          	
                 //osetrit oprandy na NULL, pokud bude jakykoliv z nich NULL, vraci se rovnou NULL
                 break;
                 
