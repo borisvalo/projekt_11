@@ -1397,9 +1397,24 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									if (token->typ != RETEZEC){
 										return ERR_SYNTAX;
 									}
+									
 									generuj_klic(0, &gen_klic);
 									BVSVloz(&pom_tab_sym, gen_klic, NULL);
                   BVSNajdi(pom_tab_sym, gen_klic, &op3);
+                  if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(kam_priradit)+1) * sizeof(char)))==NULL){
+										return ERR_INTERNI;
+                  }
+                  strcpy(((UkTBSPolozka) op3)->data.dataRet, kam_priradit);
+                  
+                  obnov(&obsah);
+                  obsah->typ = TDCISLO;
+                  obsah->data.dataCis = 3;
+									generuj_klic(0, &gen_klic);
+									BVSVloz(&pom_tab_sym, gen_klic, obsah);
+                  BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+                  
+									Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);
+									
 									generuj_klic(0, &gen_klic);
 									BVSVloz(&pom_tab_sym, gen_klic, NULL);
                   BVSNajdi(pom_tab_sym, gen_klic, &op2);
@@ -1413,7 +1428,7 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
                   }
                   strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
 
-									Vloz_instrukci(seznam_instrukci, IN_READ, (UkTBSPolozka) op2, NULL, (UkTBSPolozka) op3);
+									Vloz_instrukci(seznam_instrukci, IN_READ, (UkTBSPolozka) op2, NULL, (UkTBSPolozka) op3); // op3 cil
 									
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
@@ -1894,7 +1909,8 @@ int syntakticky_analyzator(){
  ******************/
  
  
- 
+  
+
  int syntax_vyrazu() {
 
     //TPrvek pom1, pom2, pom3, pom4;
@@ -2640,10 +2656,14 @@ int syntakticky_analyzator(){
             (token->typ != VETSIROVNO) && (token->typ != VETSITKOKONEC) && (token->typ != MENSIROVNO) &&
             (token->typ != MENSITKOKONEC) && (token->typ != TNNIL) && (token->typ != TNFALSE) &&
             (token->typ != TNTRUE)) &&
-            (zas_int.top == 1) && (zas_int.array[1] == NETERMINAL) && (zas_int.array[0] == DOLAR)) {
+            (zas_int.top == 1) && ((zas_int.array[1] == NETERMINAL) || (zas_int.array[1] == MYIDKONEC)) && (zas_int.array[0] == DOLAR)) {
 				
+				
+			
 				
 			if((pocet_redukci == 1) && (kolik_neterminalu == 1)) {
+				
+				
 			
 				if(zasobnik_pristup_uk(&zas_uk, &ukprom, 0)) {
 					return ERR_INTERNI;
@@ -2746,4 +2766,3 @@ int syntakticky_analyzator(){
    return err_chyba;
 
 }  // konec funkce syntax_vyrazu()
-
