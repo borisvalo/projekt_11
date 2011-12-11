@@ -53,15 +53,15 @@ void heapsort(char *ret){
   int i;
   char pom;
   int left, right;
-
-  left = LENGHT/2;
-  right = LENGHT;
+	int length=strlen(ret);
+  left = length/2;
+  right = length;
   
   for(i = left;i >= 1; i--){
 	siftdown(ret, i, right);  
   }
   
-  for(right = LENGHT; right >= 2; right--){
+  for(right = length; right >= 2; right--){
 	pom = ret[0];
 	ret[0] = ret[right-1];
 	ret[right-1] = pom;
@@ -85,35 +85,34 @@ void fail(char *vzorek, int dv, int *p){
 }
 
 int KMP_hledani(char *ret, int delka_ret, char *vzorek, int delka_vz){
-	int i, j, s;
+	int i, j;// s;
 	int *pole;
 	i = 0;
 	j = 0;
 	
 	pole = malloc((delka_ret+delka_vz)*sizeof(int));
 	fail(vzorek, delka_vz, pole);
-	
+	/*
 	for(s = 0; s < (delka_ret + delka_vz); s++){
 	  printf("%d \n", pole[s]);	
 	} 
-	
+	*/
 	while((i <= delka_ret) && (j <= delka_vz)){
 	  if((j == 0) || (ret[i] == vzorek[j])){
-		i++;
-		j++;  
+			i++;
+			j++;  
 	  }else{
-		 
-		j = pole[j];
+			j = pole[j];
 	  }
 	}
 	
+	free(pole);
 	if(j <= delka_vz){
 	  return i-delka_vz;	
 	}else{
 	  return -1;	
 	}
 	
-	free(pole);
 
 }
 

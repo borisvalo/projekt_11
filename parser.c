@@ -947,7 +947,7 @@ int ll_prikazy(){
 										return chyba;
 									}
 									break;
-		case RSFIND:  chyba = dej_token();						
+		case RSFIND:  chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
@@ -955,24 +955,95 @@ int ll_prikazy(){
 										return ERR_SYNTAX;
 									}
 									//prvni parametr
-									chyba = syntax_vyrazu();
+									chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op1);
-									if (token->typ != CARKA){
+									if (token->typ == RETEZEC){
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+		                BVSNajdi(pom_tab_sym, gen_klic, &op3);
+		                op3->typ = TDRETEZEC;
+		                op3->data.dataRet = malloc( (strlen(token->data)+1) * sizeof (char));
+		                if (op3->data.dataRet == NULL){
+		                	return ERR_INTERNI;
+		                }
+		                strcpy(op3->data.dataRet, token->data);
+									}else if (token->typ == IDKONEC){
+									//hledej
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op3);
+										if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op3)->data.dataRet, token->data);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 1;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);   
+									}else{
 										return ERR_SYNTAX;
 									}
-									//druhy parametr
-									chyba = syntax_vyrazu();
+									
+									//carka
+									chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op2);
+									if(token->typ != CARKA){
+										return ERR_SYNTAX;
+									}
+									
+									//druhy parametr
+									chyba = dej_token();	
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ == RETEZEC){
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+		                BVSNajdi(pom_tab_sym, gen_klic, &op2);
+		                op3->typ = TDRETEZEC;
+		                op3->data.dataRet = malloc( (strlen(token->data)+1) * sizeof (char));
+		                if (op2->data.dataRet == NULL){
+		                	return ERR_INTERNI;
+		                }
+		                strcpy(op2->data.dataRet, token->data);
+									}else if (token->typ == IDKONEC){
+									//hledej
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op2);
+										if(( ( (UkTBSPolozka) op2)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 2;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);   
+									}else{
+										return ERR_SYNTAX;
+									}
+									
+									//                                        ret| ret| cil
+                  Vloz_instrukci(seznam_instrukci, IN_FIND, op3, op2, NULL);
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}
@@ -984,10 +1055,6 @@ int ll_prikazy(){
 									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op3);
-                  Vloz_instrukci(seznam_instrukci, IN_FIND, op1, op2, op3);
 									
 									//další příkazy
 									chyba = dej_token();		
@@ -998,8 +1065,8 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									break;		
-		case RSSORT:  chyba = dej_token();						
+									break;	
+		case RSSORT:  chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
@@ -1007,16 +1074,53 @@ int ll_prikazy(){
 										return ERR_SYNTAX;
 									}
 									//prvni parametr
-									chyba = syntax_vyrazu(); // TODO: mozna jen retezec...
+									printf("jdu na prvni par %d \n", token->typ);
+									chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op3);
-                  Vloz_instrukci(seznam_instrukci, IN_SORT, token->data, NULL, op3);
+									if (token->typ == RETEZEC){
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+		                BVSNajdi(pom_tab_sym, gen_klic, &op3);
+		                op3->typ = TDRETEZEC;
+		                op3->data.dataRet = malloc( (strlen(token->data)+1) * sizeof (char));
+		                if (op3->data.dataRet == NULL){
+		                	return ERR_INTERNI;
+		                }
+		                strcpy(op3->data.dataRet, token->data);
+									}else if (token->typ == IDKONEC){
+									//hledej
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op3);
+										if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op3)->data.dataRet, token->data);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 1;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);   
+									}else{
+										return ERR_SYNTAX;
+									}
 									
-									//další příkazy
+									
+									
+									printf("dalsi krok sort %d \n", token->typ);
+									//                                        ret| /   | cil
+                  Vloz_instrukci(seznam_instrukci, IN_SORT, op3, NULL, NULL);
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}
@@ -1025,6 +1129,7 @@ int ll_prikazy(){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
+									printf("a sme skoro u konce sort %d \n", token->typ);
 									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
@@ -1595,7 +1700,7 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 										return chyba;
 									}
 									break;
-		case RSFIND:  chyba = dej_token();						
+		case RSFIND:  chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
@@ -1603,24 +1708,117 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 										return ERR_SYNTAX;
 									}
 									//prvni parametr
-									chyba = syntax_vyrazu();
+									chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op1);
-									if (token->typ != CARKA){
+									if (token->typ == RETEZEC){
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+		                BVSNajdi(pom_tab_sym, gen_klic, &op3);
+		                op3->typ = TDRETEZEC;
+		                op3->data.dataRet = malloc( (strlen(token->data)+1) * sizeof (char));
+		                if (op3->data.dataRet == NULL){
+		                	return ERR_INTERNI;
+		                }
+		                strcpy(op3->data.dataRet, token->data);
+									}else if (token->typ == IDKONEC){
+									//hledej
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op3);
+										if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op3)->data.dataRet, token->data);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 1;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);   
+									}else{
 										return ERR_SYNTAX;
 									}
-									//druhy parametr
-									chyba = syntax_vyrazu();
+									
+									//carka
+									chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op2);
+									if(token->typ != CARKA){
+										return ERR_SYNTAX;
+									}
+									
+									//druhy parametr
+									chyba = dej_token();	
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
+									if (token->typ == RETEZEC){
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+		                BVSNajdi(pom_tab_sym, gen_klic, &op2);
+		                op2->typ = TDRETEZEC;
+		                op2->data.dataRet = malloc( (strlen(token->data)+1) * sizeof (char));
+		                if (op2->data.dataRet == NULL){
+		                	return ERR_INTERNI;
+		                }
+		                strcpy(op2->data.dataRet, token->data);
+									}else if (token->typ == IDKONEC){
+									//hledej
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op2);
+										if(( ( (UkTBSPolozka) op2)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op2)->data.dataRet, token->data);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 2;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op2);   
+									}else{
+										return ERR_SYNTAX;
+									}
+									
+									
+										//hledej kam_priradit
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op1);
+										if(( ( (UkTBSPolozka) op1)->data.dataRet = (char *) malloc((strlen(kam_priradit)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op1)->data.dataRet, kam_priradit);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 3;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op1); 
+									
+									
+									
+									
+									//                                        ret| ret| cil
+                  Vloz_instrukci(seznam_instrukci, IN_FIND, op3, op2, NULL);
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}
@@ -1632,16 +1830,6 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									if (token->typ != STREDNIK){
 										return ERR_SYNTAX;
 									}
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op3);
-                  Vloz_instrukci(seznam_instrukci, IN_FIND, op1, op2, op3);
-									
-									//prirazeni vysledku
-									if(!BVSNajdi (pom_tab_sym, kam_priradit, &op1)){
-										return ERR_SEMANT; 
-									}
-									Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, op1);
 									
 									//další příkazy
 									chyba = dej_token();		
@@ -1652,7 +1840,7 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									break;		
+									break;	
 		case RSSORT:  chyba = dej_token();	
 									printf("///////////////////vstup sort %d \n", token->typ);
 									if (chyba!=ERR_OK){
@@ -1662,22 +1850,71 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 										return ERR_SYNTAX;
 									}
 									//prvni parametr
-									chyba = syntax_vyrazu(); // TODO: mozna jen retezec...
+									printf("jdu na prvni par %d \n", token->typ);
+									chyba = dej_token();	
 									if (chyba!=ERR_OK){
 										return chyba;
 									}
-									printf("dalsi krok sort %d \n", token->typ);
-									generuj_klic(0, &gen_klic);
-									BVSVloz(&pom_tab_sym, gen_klic, NULL);
-                  BVSNajdi(pom_tab_sym, gen_klic, &op3);
-                  Vloz_instrukci(seznam_instrukci, IN_SORT, token->data, NULL, op3);
-									
-									//prirazeni vysledku
-									if(!BVSNajdi (pom_tab_sym, kam_priradit, &op1)){
-										return ERR_SEMANT; 
+									if (token->typ == RETEZEC){
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+		                BVSNajdi(pom_tab_sym, gen_klic, &op3);
+		                op3->typ = TDRETEZEC;
+		                op3->data.dataRet = malloc( (strlen(token->data)+1) * sizeof (char));
+		                if (op3->data.dataRet == NULL){
+		                	return ERR_INTERNI;
+		                }
+		                strcpy(op3->data.dataRet, token->data);
+									}else if (token->typ == IDKONEC){
+									//hledej
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op3);
+										if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op3)->data.dataRet, token->data);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 1;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);   
+									}else{
+										return ERR_SYNTAX;
 									}
-									Vloz_instrukci(seznam_instrukci, IN_PRIRAD, op3, NULL, op1);
 									
+									
+										//hledej
+										obnov(&obsah);
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, NULL);
+										BVSNajdi(pom_tab_sym, gen_klic, &op2);
+										if(( ( (UkTBSPolozka) op2)->data.dataRet = (char *) malloc((strlen(kam_priradit)+1) * sizeof(char)))==NULL){
+											return ERR_INTERNI;
+										}
+										strcpy(((UkTBSPolozka) op2)->data.dataRet, kam_priradit);
+
+										obsah->typ = TDCISLO;
+										obsah->data.dataCis = 3;
+										generuj_klic(0, &gen_klic);
+										BVSVloz(&pom_tab_sym, gen_klic, obsah);
+										BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+										//				| /		| poradi meneneho parametru | nazev hledane promenne
+										Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op2); 
+									
+									
+									printf("dalsi krok sort %d \n", token->typ);
+									//                                        ret| /   | cil
+                  Vloz_instrukci(seznam_instrukci, IN_SORT, op3, NULL, NULL);
+									
+									chyba = dej_token();		
+									if (chyba!=ERR_OK){
+										return chyba;
+									}
 									if (token->typ != ZAVPRAVA){
 										return ERR_SYNTAX;
 									}

@@ -1,6 +1,6 @@
 function main()
 local a=5;
-local b=true;
+local b=3;
 local c="poradny retezec :-)";
 
 --a=1;
@@ -20,16 +20,15 @@ if (2+3 == 5) then
 else
 	c = 1;
 end;]]
-
-
 --a = ((5+3)/2)^3;
-
 --write(a, b, c);
 --read("*n");
 --a = read("*n");
 --a=type(c);
 --a=type(d); -- !!!!!!!!!!!!!! segfault na neexistujici d
+--b=substr(c, 3, 5);
+--write(b);
+--sort(c);
+a=find("asdfg", "sd");
 
-b=substr(c, 3, 5);
-write(b);
 end;

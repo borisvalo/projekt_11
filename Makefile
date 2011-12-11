@@ -4,8 +4,8 @@ CC=gcc
 RM=rm -f
 
 
-all: scaner.o parser.o str.o zasobnik.o bvs.o seznam.o vfce.o interpret.o main.o
-	$(CC) $(CFLAGS) -o $(BIN) main.o parser.o scaner.o seznam.o zasobnik.o vfce.o interpret.o  str.o bvs.o -lm
+all: scaner.o parser.o str.o zasobnik.o bvs.o seznam.o vfce.o ial.o interpret.o main.o
+	$(CC) $(CFLAGS) -o $(BIN) main.o parser.o scaner.o seznam.o zasobnik.o vfce.o ial.o interpret.o  str.o bvs.o -lm
 
 parser.o: parser.c parser.h scaner.h zasobnik.h str.h interpret.h bvs.h
 	$(CC) $(CFLAGS) -c -o parser.o parser.c 
@@ -13,7 +13,10 @@ parser.o: parser.c parser.h scaner.h zasobnik.h str.h interpret.h bvs.h
 vfce.o: vfce.c vfce.h
 	$(CC) $(CFLAGS) -c -o vfce.o vfce.c
 	
-interpret.o: interpret.c interpret.h str.h bvs.h scaner.h parser.h
+ial.o: ial.c ial.h
+	$(CC) $(CFLAGS) -c -o ial.o ial.c
+	
+interpret.o: interpret.c interpret.h str.h bvs.h scaner.h parser.h ial.h
 	$(CC) $(CFLAGS) -c -o interpret.o interpret.c
 
 str.o: str.c str.h
@@ -33,5 +36,6 @@ seznam.o: seznam.c interpret.h bvs.h scaner.h parser.h
 
 main.o: main.c parser.h scaner.h zasobnik.h str.h interpret.h bvs.h
 	$(CC) $(CFLAGS) -c -o main.o main.c
+	
 clean:
 	$(RM) *.o $(BIN)

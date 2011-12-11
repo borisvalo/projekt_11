@@ -24,7 +24,7 @@
 #include "scaner.h"
 #include "parser.h"
 #include "vfce.h"
-//#include "ial.c"
+#include "ial.h"
 
 extern UkTToken token;
 extern UkTZasAdr zas_navr_adres; // zasobnik navratovych adres
@@ -378,11 +378,55 @@ int Interpret(UkTSezInstr list) {
                 
             case IN_FIND:
                 //zavolani funkce find()
+            		if (((UkTBSPolozka)ukinstr->op3) == NULL){
+			          	break;
+		          	}
+		          	
+		          	//uvolneni minulych dat
+		          	if ((((UkTBSPolozka)ukinstr->op3)->typ) == TDRETEZEC) {
+              		free(((UkTBSPolozka)ukinstr->op3)->data.dataRet);
+              	}
+              	
+              	//kontrola typu
+                if ( (((UkTBSPolozka)ukinstr->op1)->typ != TDRETEZEC) || (((UkTBSPolozka)ukinstr->op2)->typ != TDRETEZEC)){
+                	(((UkTBSPolozka)ukinstr->op3)->typ) = TDNIL;
+                	break;
+                }
+                
+            	printf("instrukce find\n");
+                //hledani
+                int pozice_vz;
+                if ((pozice_vz = KMP_hledani(((UkTBSPolozka)ukinstr->op1)->data.dataRet, strlen(((UkTBSPolozka)ukinstr->op1)->data.dataRet), ((UkTBSPolozka)ukinstr->op2)->data.dataRet, strlen(((UkTBSPolozka)ukinstr->op2)->data.dataRet))) == -1 ){
+                	(((UkTBSPolozka)ukinstr->op3)->typ) = TDBOOL;
+                	(((UkTBSPolozka)ukinstr->op3)->data.dataBool) = FALSE;
+                }else{
+                	(((UkTBSPolozka)ukinstr->op3)->typ) = TDCISLO;
+                	(((UkTBSPolozka)ukinstr->op3)->data.dataCis) = pozice_vz;
+                }
+                
+            	printf("instrukce find\n");
                 break;
                 
             case IN_SORT:
+            		if (((UkTBSPolozka)ukinstr->op3) == NULL){
+			          	break;
+		          	}
+		          	
+		          	printf("\n\n%s\n", (((UkTBSPolozka)ukinstr->op1)->data.dataRet));
                 //strcpy(strcmp(((UkTBSPolozka)ukinstr->op3)->data.dataRet, strcmp(((UkTBSPolozka)ukinstr->op1)->data.dataRet);
-                //heapsort(strcmp(((UkTBSPolozka)ukinstr->op3)->data.dataRet);
+                char* pom_char = malloc ((strlen(((UkTBSPolozka)ukinstr->op1)->data.dataRet)+1) *sizeof (char));
+                if (((UkTBSPolozka)ukinstr->op1)->data.dataRet == NULL){
+                	return ERR_INTERNI;
+                }
+                strcpy (pom_char , ((UkTBSPolozka)ukinstr->op1)->data.dataRet);
+                
+                heapsort(pom_char);
+                if(((UkTBSPolozka)ukinstr->op3)->typ == TDRETEZEC){
+                	free(((UkTBSPolozka)ukinstr->op3)->data.dataRet);
+                }
+                ((UkTBSPolozka)ukinstr->op3)->typ = TDRETEZEC;
+                ((UkTBSPolozka)ukinstr->op3)->data.dataRet = malloc( sizeof(char) * (strlen(pom_char)+1) );
+                strcpy(((UkTBSPolozka)ukinstr->op3)->data.dataRet, pom_char);
                 break;
                 
             case IN_SUBSTR_1:

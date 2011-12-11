@@ -70,7 +70,11 @@ void substr(UkTBSPolozka muj_odkaz, char **string, int cislo1, int cislo2){
             }
             i++;
         }
-        (*string)[] = '\0';
+				if(j+1 > delka_promenne){
+				delka_promenne *=2;
+				Ret_realokuj(string,delka_promenne);
+				}
+				(*string)[j] = '\0';
         printf("%s\n", (*string));
     }
 }
