@@ -894,7 +894,21 @@ int ll_prikazy(){
 																	obsah->data.dataBool = FALSE;
 																	break;
 										case TNNIL: break; 
-										case IDKONEC: Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, token->data, obsah);
+										case IDKONEC: generuj_klic(0, &gen_klic);
+																	BVSVloz(&pom_tab_sym, gen_klic, NULL);
+																	BVSNajdi(pom_tab_sym, gen_klic, &op3);
+																	if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+																		return ERR_INTERNI;
+																	}
+																	strcpy(((UkTBSPolozka) op3)->data.dataRet, token->data);
+
+																	obsah->typ = TDCISLO;
+																	obsah->data.dataCis = 1;
+																	generuj_klic(0, &gen_klic);
+																	BVSVloz(&pom_tab_sym, gen_klic, obsah);
+																	BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+																	
+																	Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);
 																	break;
 										default: return ERR_SYNTAX;
 									}
@@ -906,7 +920,7 @@ int ll_prikazy(){
 									generuj_klic(0, &gen_klic);
 									BVSVloz(&pom_tab_sym, gen_klic, NULL);
                   BVSNajdi(pom_tab_sym, gen_klic, &op3);
-									Vloz_instrukci(seznam_instrukci, IN_TYPE, op2, NULL, op3);
+									Vloz_instrukci(seznam_instrukci, IN_TYPE, op2, NULL, NULL);
 									
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){
@@ -1487,7 +1501,21 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 																	obsah->data.dataBool = FALSE;
 																	break;
 										case TNNIL: break; 
-										case IDKONEC: Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, token->data, obsah);
+										case IDKONEC: generuj_klic(0, &gen_klic);
+																	BVSVloz(&pom_tab_sym, gen_klic, NULL);
+																	BVSNajdi(pom_tab_sym, gen_klic, &op3);
+																	if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(token->data)+1) * sizeof(char)))==NULL){
+																		return ERR_INTERNI;
+																	}
+																	strcpy(((UkTBSPolozka) op3)->data.dataRet, token->data);
+
+																	obsah->typ = TDCISLO;
+																	obsah->data.dataCis = 1;
+																	generuj_klic(0, &gen_klic);
+																	BVSVloz(&pom_tab_sym, gen_klic, obsah);
+																	BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+																	
+																	Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);
 																	break;
 										default: return ERR_SYNTAX;
 									}
@@ -1499,7 +1527,30 @@ int ll_prikaz_s_id_a_rovnase(char *kam_priradit){
 									generuj_klic(0, &gen_klic);
 									BVSVloz(&pom_tab_sym, gen_klic, NULL);
                   BVSNajdi(pom_tab_sym, gen_klic, &op3);
-									Vloz_instrukci(seznam_instrukci, IN_TYPE, op2, NULL, op3);
+                  
+                  
+                  
+									obnov(&obsah);
+									generuj_klic(0, &gen_klic);
+									BVSVloz(&pom_tab_sym, gen_klic, NULL);
+									BVSNajdi(pom_tab_sym, gen_klic, &op3);
+									if(( ( (UkTBSPolozka) op3)->data.dataRet = (char *) malloc((strlen(kam_priradit)+1) * sizeof(char)))==NULL){
+										return ERR_INTERNI;
+									}
+									strcpy(((UkTBSPolozka) op3)->data.dataRet, kam_priradit);
+
+									obsah->typ = TDCISLO;
+									obsah->data.dataCis = 3;
+									generuj_klic(0, &gen_klic);
+									BVSVloz(&pom_tab_sym, gen_klic, obsah);
+									BVSNajdi(pom_tab_sym, gen_klic, &navratova_hodnota);
+								
+									Vloz_instrukci(seznam_instrukci, IN_HLEDEJ, zas_zpracovani, navratova_hodnota, op3);                  
+
+                  
+                  
+                  
+									Vloz_instrukci(seznam_instrukci, IN_TYPE, op2, NULL, NULL);
 									
 									chyba = dej_token();		
 									if (chyba!=ERR_OK){

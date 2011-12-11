@@ -365,7 +365,15 @@ int Interpret(UkTSezInstr list) {
                 break;
                 
             case IN_TYPE:
-                strcpy(((UkTBSPolozka)ukinstr->op3)->data.dataRet, type((UkTBSPolozka)ukinstr->op1));
+            		if ( ((UkTBSPolozka)ukinstr->op3) != NULL ){
+            			
+            			if (((UkTBSPolozka)ukinstr->op3)->typ == TDRETEZEC){
+            				free(((UkTBSPolozka)ukinstr->op3)->data.dataRet);
+            			}
+            			((UkTBSPolozka)ukinstr->op3)->data.dataRet = malloc( (strlen( type((UkTBSPolozka)ukinstr->op1) )+1) * sizeof(char) ); 
+	                strcpy(((UkTBSPolozka)ukinstr->op3)->data.dataRet, type((UkTBSPolozka)ukinstr->op1));
+	                ((UkTBSPolozka)ukinstr->op3)->typ = TDRETEZEC;
+                }
                 break;
                 
             case IN_FIND:
