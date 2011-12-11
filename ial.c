@@ -71,49 +71,49 @@ void heapsort(char *ret){
 
 // Knuth-Moris-Prattův algoritmus pro vyhledávání podřetězce v řetězci
 void fail(char *vzorek, int dv, int *p){
-	int k, r;
-	
-	p[0] = 0;
-	
-	for(k = 1; k < dv; k++){
-	  r = p[k-1];	
-	  while((r>0) && (p[r]!=p[k-1])){
-		r = p[r];
-	  }
-	  p[k] = r+1;
-	}
+    int k, r;
+    k = 0;
+    r = -1;
+    p[0] = -1;
+
+    while (k < dv) {
+        while ((r > -1) &&  (vzorek[k] != vzorek[r])){
+            r = p[r];
+ }
+        k++;
+        r++;
+
+        if (vzorek[k] == vzorek[r]){
+  p[k] = p[r];
+ }else{
+  p[k] = r;
+        }
+    }
 }
 
 int KMP_hledani(char *ret, int delka_ret, char *vzorek, int delka_vz){
-	int i, j;// s;
-	int *pole;
-	i = 0;
-	j = 0;
-	
-	pole = malloc((delka_ret+delka_vz)*sizeof(int));
-	fail(vzorek, delka_vz, pole);
-	/*
-	for(s = 0; s < (delka_ret + delka_vz); s++){
-	  printf("%d \n", pole[s]);	
-	} 
-	*/
-	while((i <= delka_ret) && (j <= delka_vz)){
-	  if((j == 0) || (ret[i] == vzorek[j])){
-			i++;
-			j++;  
-	  }else{
-			j = pole[j];
-	  }
-	}
-	
-	free(pole);
-	if(j <= delka_vz){
-	  return i-delka_vz;	
-	}else{
-	  return -1;	
-	}
-	
+ int i, j;
+ int *pole;
+ i = 0;
+ j = 0;
+ 
+ pole = malloc((delka_ret+delka_vz)*sizeof(int));
+ fail(vzorek, delka_vz, pole);
+ 
+ while (j < delka_vz) {
+         while ((i > -1) && (vzorek[i] != ret[j])){
+              i = pole[i];
+  }
+         i++;
+         j++;
+
+         if (i >= delka_ret) {      
+             free(pole);
+                 return j-i + 1;
+
+         }
+     }
+     free(pole);
+     return -1;
 
 }
-
-

@@ -29,6 +29,6 @@ end;]]
 --b=substr(c, 3, 5);
 --write(b);
 --sort(c);
-a=find("asdfg", "sd");
+a=find("asdfg", "sjhtd");
 
 end;

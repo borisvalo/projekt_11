@@ -398,7 +398,7 @@ int Interpret(UkTSezInstr list) {
                 int pozice_vz;
                 if ((pozice_vz = KMP_hledani(((UkTBSPolozka)ukinstr->op1)->data.dataRet, strlen(((UkTBSPolozka)ukinstr->op1)->data.dataRet), ((UkTBSPolozka)ukinstr->op2)->data.dataRet, strlen(((UkTBSPolozka)ukinstr->op2)->data.dataRet))) == -1 ){
                 	(((UkTBSPolozka)ukinstr->op3)->typ) = TDBOOL;
-                	(((UkTBSPolozka)ukinstr->op3)->data.dataBool) = FALSE;
+                	(((UkTBSPolozka)ukinstr->op3)->data.dataBool) = TRUE;
                 }else{
                 	(((UkTBSPolozka)ukinstr->op3)->typ) = TDCISLO;
                 	(((UkTBSPolozka)ukinstr->op3)->data.dataCis) = pozice_vz;
